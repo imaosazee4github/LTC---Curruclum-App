@@ -1,33 +1,3 @@
-// import PublicHeader from "../../components/layout/PublicHeader";
-// import PublicFooter from "../../components/layout/PublicFooter";
-
-// export default function LandingPage() {
-//   return (
-//     <div className="min-h-screen bg-slate-50">
-//       <PublicHeader />
-
-//       <main className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
-//         <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-//           LTC Nigeria
-//         </p>
-
-//         <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight text-blue-950 md:text-6xl">
-//           Pioneer Student Tracking and
-//           Readiness System
-//         </h1>
-
-//         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-//           Supporting student learning,
-//           development, mentoring and readiness
-//           throughout the Pioneer programme.
-//         </p>
-//       </main>
-//       <PublicFooter />
-//     </div>
-//   );
-// }
-
-
 import { Link } from "react-router-dom";
 
 import PublicFooter from "../../components/layout/PublicFooter";
