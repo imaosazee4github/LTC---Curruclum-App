@@ -5,6 +5,17 @@ import {
 
 import { useAuth } from "../../hooks/useAuth";
 
+const roleDashboardPaths = {
+  student: "/student/dashboard",
+
+  // Add these routes when their dashboards exist:
+  // mentor: "/mentor/dashboard",
+  // instructor: "/instructor/dashboard",
+  // student_support: "/student-support/dashboard",
+  // programme_director: "/programme-director/dashboard",
+  // administrator: "/admin/dashboard",
+};
+
 export default function AuthRedirectPage() {
   const navigate = useNavigate();
 
@@ -21,12 +32,9 @@ export default function AuthRedirectPage() {
     try {
       await signOut();
 
-      navigate(
-        "/login",
-        {
-          replace: true,
-        },
-      );
+      navigate("/login", {
+        replace: true,
+      });
     } catch (error) {
       console.error(
         "Sign out failed:",
@@ -68,95 +76,44 @@ export default function AuthRedirectPage() {
     );
   }
 
-  /*
-   * This is a temporary authentication
-   * confirmation screen. We will replace it
-   * with role-based dashboard redirection
-   * when the dashboards are created.
-   */
+  const dashboardPath =
+    roleDashboardPaths[role];
+
+  if (dashboardPath) {
+    return (
+      <Navigate
+        to={dashboardPath}
+        replace
+      />
+    );
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-12">
-      <section className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-7 text-center shadow-sm">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-700">
-          ✓
-        </div>
-
-        <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-amber-600">
-          Authentication successful
-        </p>
-
-        <h1 className="mt-2 text-3xl font-bold text-blue-950">
-          Welcome,{" "}
-          {profile.full_name ||
-            "LTC Portal User"}
+    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+      <section className="w-full max-w-lg rounded-xl border border-amber-200 bg-white p-7 text-center shadow-sm">
+        <h1 className="text-2xl font-bold text-blue-950">
+          Dashboard unavailable
         </h1>
 
-        <p className="mt-4 text-slate-600">
-          Your account has been successfully
-          authenticated.
+        <p className="mt-3 leading-6 text-slate-600">
+          Your account is active, but a dashboard
+          has not been configured for the role{" "}
+          <strong>
+            {formatRole(role) ||
+              "Unknown"}
+          </strong>
+          .
         </p>
 
-        <div className="mt-7 rounded-lg bg-slate-50 p-5 text-left">
-          <AccountDetail
-            label="Email"
-            value={profile.email}
-          />
-
-          <AccountDetail
-            label="Role"
-            value={formatRole(role)}
-          />
-
-          <AccountDetail
-            label="Account status"
-            value={formatRole(
-              accountStatus,
-            )}
-          />
-        </div>
-
-        <p className="mt-6 text-sm leading-6 text-slate-500">
-          Your role-specific dashboard will be
-          connected during the next development
-          stage.
-        </p>
-
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="flex-1 rounded-lg border border-blue-900 px-5 py-3 font-semibold text-blue-900"
-          >
-            Return Home
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="flex-1 rounded-lg bg-blue-950 px-5 py-3 font-semibold text-white"
-          >
-            Sign Out
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="mt-6 rounded-lg bg-blue-950 px-6 py-3 font-semibold text-white"
+        >
+          Sign Out
+        </button>
       </section>
     </main>
-  );
-}
-
-function AccountDetail({
-  label,
-  value,
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-200 py-3 last:border-0">
-      <span className="text-sm text-slate-500">
-        {label}
-      </span>
-
-      <span className="text-right text-sm font-semibold text-slate-800">
-        {value || "Not available"}
-      </span>
-    </div>
   );
 }
 
@@ -168,7 +125,7 @@ function PageMessage({
     <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <div
         role={error ? "alert" : "status"}
-        className={`max-w-lg rounded-lg border p-5 ${
+        className={`w-full max-w-lg rounded-lg border p-5 text-center ${
           error
             ? "border-red-200 bg-red-50 text-red-700"
             : "border-slate-200 bg-white text-slate-600"

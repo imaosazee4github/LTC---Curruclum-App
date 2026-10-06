@@ -4,18 +4,44 @@ import {
   BrowserRouter,
 } from "react-router-dom";
 
+import {
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+
 import App from "./App";
-import { AuthProvider } from "./context/AuthContext";
+import {
+  AuthProvider,
+} from "./context/AuthContext";
+
 import "./index.css";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+
+    mutations: {
+      retry: 0,
+    },
+  },
+});
 
 createRoot(
   document.getElementById("root"),
 ).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <QueryClientProvider
+        client={queryClient}
+      >
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   </StrictMode>,
 );
