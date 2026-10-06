@@ -1,4 +1,3 @@
-
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
@@ -10,6 +9,8 @@ import LoginPage from "../pages/auth/LoginPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import StudentRegistrationPage from "../pages/auth/StudentRegistrationPage";
 import LandingPage from "../pages/public/LandingPage";
+import StudentDashboardPage from "../pages/student/StudentDashboardPage";
+import StudentProfilePage from "../pages/student/StudentProfilePage";
 
 export default function AppRoutes() {
   return (
@@ -27,6 +28,24 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <AuthRedirectPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/profile"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentProfilePage />
           </ProtectedRoute>
         }
       />
