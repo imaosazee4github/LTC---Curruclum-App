@@ -34,7 +34,7 @@ const navigation = [
     label: "Staff Management",
     path: "/super-admin/staff",
     icon: UsersRound,
-    available: false,
+    available: true,
   },
   {
     label: "Learning Areas",
