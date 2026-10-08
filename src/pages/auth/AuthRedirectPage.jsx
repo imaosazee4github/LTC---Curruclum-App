@@ -6,14 +6,15 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 
 const roleDashboardPaths = {
-  student: "/student/dashboard",
+  student:
+    "/student/dashboard",
 
-  // Add these routes when their dashboards exist:
-  // mentor: "/mentor/dashboard",
-  // instructor: "/instructor/dashboard",
-  // student_support: "/student-support/dashboard",
-  // programme_director: "/programme-director/dashboard",
-  // administrator: "/admin/dashboard",
+  mentor_department:
+    "/mentor-department/dashboard",
+
+  mentor:
+    "/mentor/dashboard",
+
 };
 
 export default function AuthRedirectPage() {
