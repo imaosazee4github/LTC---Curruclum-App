@@ -191,3 +191,60 @@ export async function updateMyProfilePhoto({
 
   return data;
 }
+
+
+export async function getMyAssignedMentor() {
+  const { data, error } =
+    await supabase.rpc(
+      "get_my_assigned_mentor",
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    success:
+      Boolean(data?.success),
+
+    assigned:
+      Boolean(data?.assigned),
+
+    mentor:
+      data?.mentor || null,
+
+    message:
+      data?.message || "",
+  };
+}
+export async function getMyApprovedMentorFeedback() {
+  const { data, error } =
+    await supabase.rpc(
+      "get_my_approved_mentor_feedback",
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    success:
+      Boolean(data?.success),
+
+    assignedMentor:
+      data?.assignedMentor || null,
+
+    summary: {
+      approvedFeedback:
+        Number(
+          data?.summary
+            ?.approvedFeedback,
+        ) || 0,
+    },
+
+    feedback:
+      Array.isArray(data?.feedback)
+        ? data.feedback
+        : [],
+  };
+}

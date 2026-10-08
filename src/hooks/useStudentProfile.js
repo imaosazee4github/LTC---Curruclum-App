@@ -1,144 +1,140 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "./useAuth";
 
 import {
+  getMyApprovedMentorFeedback,
+  getMyAssignedMentor,
   getOrInitializeStudentProfile,
   updateMyProfilePhoto,
   updateMyStudentProfile,
 } from "../services/studentService";
 
 export function useStudentProfile() {
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
 
-  const {
-    profile,
-    role,
-    refreshProfile,
-  } = useAuth();
+  const { profile, role, refreshProfile } = useAuth();
 
-  const studentProfileQuery =
-    useQuery({
-      queryKey: [
-        "student-profile",
-        profile?.id,
-      ],
+  const studentProfileQuery = useQuery({
+    queryKey: ["student-profile", profile?.id],
 
-      queryFn: () =>
-        getOrInitializeStudentProfile(
-          profile.id,
-        ),
+    queryFn: () => getOrInitializeStudentProfile(profile.id),
 
-      enabled:
-        Boolean(profile?.id) &&
-        role === "student",
+    enabled: Boolean(profile?.id) && role === "student",
 
-      staleTime: 30 * 1000,
-    });
+    staleTime: 30 * 1000,
+  });
 
-  const updateProfileMutation =
-    useMutation({
-      mutationFn:
-        updateMyStudentProfile,
+  const mentorFeedbackQuery = useQuery({
+    queryKey: ["student-mentor-feedback", profile?.id],
 
-      onSuccess: async () => {
-        await Promise.all([
-          refreshProfile(),
+    queryFn: getMyApprovedMentorFeedback,
 
-          queryClient.invalidateQueries({
-            queryKey: [
-              "student-profile",
-              profile?.id,
-            ],
-          }),
-        ]);
-      },
+    enabled: Boolean(profile?.id) && role === "student",
 
-      onError: (error) => {
-        console.error(
-          "Student profile update failed:",
-          error,
-        );
-      },
-    });
+    staleTime: 30 * 1000,
+  });
 
-  const updatePhotoMutation =
-    useMutation({
-      mutationFn:
-        updateMyProfilePhoto,
+  const assignedMentorQuery = useQuery({
+    queryKey: ["student-assigned-mentor", profile?.id],
 
-      onSuccess: async () => {
-        await Promise.all([
-          refreshProfile(),
+    queryFn: getMyAssignedMentor,
 
-          queryClient.invalidateQueries({
-            queryKey: [
-              "student-profile",
-              profile?.id,
-            ],
-          }),
-        ]);
-      },
+    enabled: Boolean(profile?.id) && role === "student",
 
-      onError: (error) => {
-        console.error(
-          "Profile photo update failed:",
-          error,
-        );
-      },
-    });
+    staleTime: 30 * 1000,
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: updateMyStudentProfile,
+
+    onSuccess: async () => {
+      await Promise.all([
+        refreshProfile(),
+
+        queryClient.invalidateQueries({
+          queryKey: ["student-profile", profile?.id],
+        }),
+      ]);
+    },
+
+    onError: (error) => {
+      console.error("Student profile update failed:", error);
+    },
+  });
+
+  const updatePhotoMutation = useMutation({
+    mutationFn: updateMyProfilePhoto,
+
+    onSuccess: async () => {
+      await Promise.all([
+        refreshProfile(),
+
+        queryClient.invalidateQueries({
+          queryKey: ["student-profile", profile?.id],
+        }),
+      ]);
+    },
+
+    onError: (error) => {
+      console.error("Profile photo update failed:", error);
+    },
+  });
 
   return {
-    studentProfile:
-      studentProfileQuery.data ||
-      null,
+    studentProfile: studentProfileQuery.data || null,
 
-    studentProfileLoading:
-      studentProfileQuery.isLoading,
+    studentProfileLoading: studentProfileQuery.isLoading,
 
-    studentProfileFetching:
-      studentProfileQuery.isFetching,
+    studentProfileFetching: studentProfileQuery.isFetching,
 
-    studentProfileError:
-      studentProfileQuery.error,
+    studentProfileError: studentProfileQuery.error,
 
-    refreshStudentProfile:
-      studentProfileQuery.refetch,
+    refreshStudentProfile: studentProfileQuery.refetch,
 
-    saveStudentProfile:
-      updateProfileMutation
-        .mutateAsync,
+    assignedMentor: assignedMentorQuery.data || null,
 
-    savingStudentProfile:
-      updateProfileMutation.isPending,
+    assignedMentorLoading: assignedMentorQuery.isLoading,
 
-    studentProfileSaveError:
-      updateProfileMutation.error,
+    assignedMentorFetching: assignedMentorQuery.isFetching,
 
-    studentProfileSaveResult:
-      updateProfileMutation.data,
+    assignedMentorError: assignedMentorQuery.error,
 
-    resetStudentProfileSave:
-      updateProfileMutation.reset,
+    refreshAssignedMentor: assignedMentorQuery.refetch,
 
-    saveProfilePhoto:
-      updatePhotoMutation.mutateAsync,
+    saveStudentProfile: updateProfileMutation.mutateAsync,
 
-    savingProfilePhoto:
-      updatePhotoMutation.isPending,
+    savingStudentProfile: updateProfileMutation.isPending,
 
-    profilePhotoError:
-      updatePhotoMutation.error,
+    studentProfileSaveError: updateProfileMutation.error,
 
-    profilePhotoResult:
-      updatePhotoMutation.data,
+    studentProfileSaveResult: updateProfileMutation.data,
 
-    resetProfilePhoto:
-      updatePhotoMutation.reset,
+    resetStudentProfileSave: updateProfileMutation.reset,
+
+    saveProfilePhoto: updatePhotoMutation.mutateAsync,
+
+    savingProfilePhoto: updatePhotoMutation.isPending,
+
+    profilePhotoError: updatePhotoMutation.error,
+
+    profilePhotoResult: updatePhotoMutation.data,
+
+    resetProfilePhoto: updatePhotoMutation.reset,
+
+    mentorFeedback: mentorFeedbackQuery.data || null,
+
+    approvedMentorFeedback: mentorFeedbackQuery.data?.feedback || [],
+
+    approvedMentorFeedbackCount:
+      mentorFeedbackQuery.data?.summary?.approvedFeedback || 0,
+
+    mentorFeedbackLoading: mentorFeedbackQuery.isLoading,
+
+    mentorFeedbackFetching: mentorFeedbackQuery.isFetching,
+
+    mentorFeedbackError: mentorFeedbackQuery.error,
+
+    refreshMentorFeedback: mentorFeedbackQuery.refetch,
   };
 }
