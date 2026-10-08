@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
+import SuperAdminDashboardPage from "../pages/super-admin/SuperAdminDashboardPage";
 import MentorAssignmentsPage from "../pages/mentor-department/MentorAssignmentsPage";
 import MentorDepartmentDashboardPage from "../pages/mentor-department/MentorDepartmentDashboardPage";
 import AuthCallbackPage from "../pages/auth/AuthCallbackPage";
@@ -95,6 +96,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["mentor"]}>
             <MentorMenteesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <SuperAdminDashboardPage />
           </ProtectedRoute>
         }
       />

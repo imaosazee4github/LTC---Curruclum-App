@@ -14,6 +14,8 @@ const roleDashboardPaths = {
 
   mentor:
     "/mentor/dashboard",
+  super_admin:
+    "/super-admin/dashboard",
 
 };
 
