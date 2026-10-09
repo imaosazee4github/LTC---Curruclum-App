@@ -271,6 +271,206 @@ function normalizeStaffSummary(summary) {
   };
 }
 
+export async function getCourseManagementData() {
+  const { data, error } =
+    await supabase.rpc(
+      "get_course_management_data",
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    success:
+      Boolean(data?.success),
+
+    summary: {
+      totalCourses:
+        Number(
+          data?.summary?.totalCourses,
+        ) || 0,
+
+      activeCourses:
+        Number(
+          data?.summary?.activeCourses,
+        ) || 0,
+
+      plannedCourses:
+        Number(
+          data?.summary?.plannedCourses,
+        ) || 0,
+
+      activeInstructors:
+        Number(
+          data?.summary
+            ?.activeInstructors,
+        ) || 0,
+
+      activeAssignments:
+        Number(
+          data?.summary
+            ?.activeAssignments,
+        ) || 0,
+    },
+
+    courses:
+      Array.isArray(data?.courses)
+        ? data.courses
+        : [],
+
+    instructors:
+      Array.isArray(
+        data?.instructors,
+      )
+        ? data.instructors
+        : [],
+  };
+}
+
+export async function createCourse({
+  code,
+  title,
+  description,
+  learningArea,
+  competencyBucket,
+  status,
+}) {
+  if (!code?.trim()) {
+    throw new Error(
+      "Enter the course code.",
+    );
+  }
+
+  if (!title?.trim()) {
+    throw new Error(
+      "Enter the course title.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "create_course",
+      {
+        p_code:
+          code.trim(),
+
+        p_title:
+          title.trim(),
+
+        p_description:
+          cleanOptionalText(
+            description,
+          ),
+
+        p_learning_area:
+          cleanOptionalText(
+            learningArea,
+          ),
+
+        p_competency_bucket:
+          competencyBucket ||
+          "foundational_competencies",
+
+        p_status:
+          status || "planned",
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function assignCourseInstructor({
+  courseId,
+  staffProfileId,
+  assignmentRole,
+}) {
+  if (!courseId) {
+    throw new Error(
+      "Select a course.",
+    );
+  }
+
+  if (!staffProfileId) {
+    throw new Error(
+      "Select an instructor.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "assign_course_instructor",
+      {
+        p_course_id:
+          courseId,
+
+        p_staff_profile_id:
+          staffProfileId,
+
+        p_assignment_role:
+          assignmentRole ||
+          "instructor",
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function closeCourseInstructorAssignment({
+  assignmentId,
+  closingStatus,
+}) {
+  if (!assignmentId) {
+    throw new Error(
+      "Select an instructor assignment.",
+    );
+  }
+
+  const allowedStatuses = [
+    "completed",
+    "inactive",
+  ];
+
+  const selectedStatus =
+    closingStatus || "completed";
+
+  if (
+    !allowedStatuses.includes(
+      selectedStatus,
+    )
+  ) {
+    throw new Error(
+      "Select a valid closing status.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "close_course_instructor_assignment",
+      {
+        p_assignment_id:
+          assignmentId,
+
+        p_closing_status:
+          selectedStatus,
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
 function cleanOptionalText(value) {
   const cleaned =
     value?.trim();
