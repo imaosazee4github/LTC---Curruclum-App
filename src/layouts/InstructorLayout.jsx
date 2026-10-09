@@ -4,11 +4,10 @@ import {
   CalendarDays,
   ClipboardList,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Menu,
-  Settings,
-  UserRoundCog,
-  UsersRound,
+  Users,
   X,
 } from "lucide-react";
 
@@ -26,54 +25,49 @@ import { useAuth } from "../hooks/useAuth";
 const navigation = [
   {
     label: "Dashboard",
-    path: "/super-admin/dashboard",
+    path: "/instructor/dashboard",
     icon: LayoutDashboard,
     available: true,
   },
   {
-    label: "Staff Management",
-    path: "/super-admin/staff",
-    icon: UsersRound,
-    available: true,
-  },
-  {
-    label: "Learning Areas",
-    path:
-      "/super-admin/learning-areas",
+    label: "My Classes",
+    path: "/instructor/classes",
     icon: BookOpen,
-    available: true,
+    available: false,
   },
   {
-    label: "Classes & Schedules",
-    path: "/super-admin/classes",
+    label: "My Students",
+    path: "/instructor/students",
+    icon: Users,
+    available: false,
+  },
+  {
+    label: "Attendance",
+    path: "/instructor/attendance",
     icon: CalendarDays,
     available: false,
   },
   {
-    label: "Student Assignments",
-    path:
-      "/super-admin/assignments",
-    icon: UserRoundCog,
-    available: false,
-  },
-  {
-    label: "Reports & Oversight",
-    path: "/super-admin/reports",
+    label: "Record Learning",
+    path: "/instructor/learning",
     icon: ClipboardList,
     available: false,
   },
   {
-    label: "System Settings",
-    path: "/super-admin/settings",
-    icon: Settings,
+    label: "Follow-Up Needed",
+    path: "/instructor/follow-ups",
+    icon: ListChecks,
     available: false,
   },
 ];
 
-export default function SuperAdminLayout({
+export default function InstructorLayout({
   children,
 }) {
   const [sidebarOpen, setSidebarOpen] =
+    useState(false);
+
+  const [signingOut, setSigningOut] =
     useState(false);
 
   const navigate = useNavigate();
@@ -84,6 +78,8 @@ export default function SuperAdminLayout({
   } = useAuth();
 
   async function handleSignOut() {
+    setSigningOut(true);
+
     try {
       await signOut();
 
@@ -92,15 +88,17 @@ export default function SuperAdminLayout({
       });
     } catch (error) {
       console.error(
-        "Super Admin sign out failed:",
+        "Instructor sign out failed:",
         error,
       );
+
+      setSigningOut(false);
     }
   }
 
   const displayName =
     profile?.full_name ||
-    "Super Administrator";
+    "Instructor";
 
   const initials =
     getInitials(displayName);
@@ -127,7 +125,7 @@ export default function SuperAdminLayout({
       >
         <div className="flex h-20 items-center justify-between border-b border-slate-800 px-5">
           <NavLink
-            to="/super-admin/dashboard"
+            to="/instructor/dashboard"
             onClick={() =>
               setSidebarOpen(false)
             }
@@ -139,11 +137,11 @@ export default function SuperAdminLayout({
 
             <div>
               <p className="font-bold">
-                Super Admin Portal
+                Instructor Portal
               </p>
 
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                System Administration
+                Learning & Progress
               </p>
             </div>
           </NavLink>
@@ -162,9 +160,11 @@ export default function SuperAdminLayout({
 
         <div className="border-b border-slate-800 px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 font-bold text-amber-800">
-              {initials}
-            </div>
+            <ProfilePhoto
+              profile={profile}
+              initials={initials}
+              size="sidebar"
+            />
 
             <div className="min-w-0">
               <p className="truncate font-semibold">
@@ -172,7 +172,7 @@ export default function SuperAdminLayout({
               </p>
 
               <p className="text-sm text-slate-400">
-                Super Administrator
+                Instructor
               </p>
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function SuperAdminLayout({
 
         <nav className="flex-1 overflow-y-auto px-3 py-5">
           <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Administration
+            Teaching
           </p>
 
           <div className="mt-3 space-y-1">
@@ -200,10 +200,14 @@ export default function SuperAdminLayout({
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700 px-4 py-3 font-semibold text-white hover:bg-slate-900"
+            disabled={signingOut}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700 px-4 py-3 font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <LogOut size={18} />
-            Sign Out
+
+            {signingOut
+              ? "Signing out..."
+              : "Sign Out"}
           </button>
         </div>
       </aside>
@@ -228,7 +232,7 @@ export default function SuperAdminLayout({
               </p>
 
               <p className="font-semibold text-blue-950">
-                Super Admin Portal
+                Instructor Portal
               </p>
             </div>
           </div>
@@ -250,17 +254,21 @@ export default function SuperAdminLayout({
               </p>
 
               <p className="text-xs text-slate-500">
-                Super Administrator
+                Instructor
               </p>
             </div>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">
-              {initials}
-            </div>
+            <ProfilePhoto
+              profile={profile}
+              initials={initials}
+              size="header"
+            />
           </div>
         </header>
 
-        {children}
+        <div className="min-h-[calc(100vh-5rem)]">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -274,7 +282,10 @@ function NavigationItem({
 
   if (!item.available) {
     return (
-      <div className="flex items-center justify-between rounded-lg px-3 py-3 text-slate-500">
+      <div
+        title="This section will be available soon."
+        className="flex items-center justify-between rounded-lg px-3 py-3 text-slate-500"
+      >
         <span className="flex items-center gap-3">
           <Icon size={19} />
           {item.label}
@@ -305,12 +316,44 @@ function NavigationItem({
   );
 }
 
+function ProfilePhoto({
+  profile,
+  initials,
+  size,
+}) {
+  const sizeClass =
+    size === "sidebar"
+      ? "h-11 w-11"
+      : "h-10 w-10";
+
+  if (profile?.profile_photo_url) {
+    return (
+      <img
+        src={profile.profile_photo_url}
+        alt={`${profile.full_name || "Instructor"} profile`}
+        className={`${sizeClass} shrink-0 rounded-full border-2 border-white object-cover`}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800`}
+    >
+      {initials}
+    </div>
+  );
+}
+
 function getInitials(name) {
-  return String(name || "SA")
-    .split(" ")
+  return String(name || "IN")
+    .trim()
+    .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0])
+    .map((part) =>
+      part.charAt(0),
+    )
     .join("")
     .toUpperCase();
 }

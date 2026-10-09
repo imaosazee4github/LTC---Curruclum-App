@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
+import CourseManagementPage from "../pages/super-admin/CourseManagementPage";
 import StaffManagementPage from "../pages/super-admin/StaffManagementPage";
 import SuperAdminDashboardPage from "../pages/super-admin/SuperAdminDashboardPage";
 import MentorAssignmentsPage from "../pages/mentor-department/MentorAssignmentsPage";
@@ -13,6 +14,7 @@ import LoginPage from "../pages/auth/LoginPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import StudentRegistrationPage from "../pages/auth/StudentRegistrationPage";
 import LandingPage from "../pages/public/LandingPage";
+import InstructorDashboardPage from "../pages/instructor/InstructorDashboardPage";
 import StudentDashboardPage from "../pages/student/StudentDashboardPage";
 import StudentProfilePage from "../pages/student/StudentProfilePage";
 import MentorDashboardPage from "../pages/mentor/MentorDashboardPage";
@@ -53,6 +55,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["student"]}>
             <StudentProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/instructor/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["instructor"]}>
+            <InstructorDashboardPage />
           </ProtectedRoute>
         }
       />
@@ -111,12 +122,21 @@ export default function AppRoutes() {
       />
 
       <Route
-  path="/super-admin/staff"
+        path="/super-admin/staff"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <StaffManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+  path="/super-admin/learning-areas"
   element={
     <ProtectedRoute
       allowedRoles={["super_admin"]}
     >
-      <StaffManagementPage />
+      <CourseManagementPage />
     </ProtectedRoute>
   }
 />
