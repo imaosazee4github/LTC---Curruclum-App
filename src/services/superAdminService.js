@@ -471,6 +471,187 @@ export async function closeCourseInstructorAssignment({
   return data;
 }
 
+export async function getCoachingAssignmentOptions() {
+  const { data, error } =
+    await supabase.rpc(
+      "get_coaching_assignment_options",
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    success:
+      Boolean(data?.success),
+
+    summary: {
+      totalCoaches:
+        Number(
+          data?.summary?.totalCoaches,
+        ) || 0,
+
+      availableCoaches:
+        Number(
+          data?.summary?.availableCoaches,
+        ) || 0,
+
+      totalStudents:
+        Number(
+          data?.summary?.totalStudents,
+        ) || 0,
+
+      activeAssignments:
+        Number(
+          data?.summary?.activeAssignments,
+        ) || 0,
+    },
+
+    coaches:
+      Array.isArray(data?.coaches)
+        ? data.coaches
+        : [],
+
+    students:
+      Array.isArray(data?.students)
+        ? data.students
+        : [],
+
+    assignments:
+      Array.isArray(data?.assignments)
+        ? data.assignments
+        : [],
+  };
+}
+
+export async function assignStudentToCoach({
+  studentProfileId,
+  coachStaffProfileId,
+  developmentArea,
+  goal,
+  currentPosition,
+  practicePlan,
+  targetDate,
+}) {
+  if (!studentProfileId) {
+    throw new Error(
+      "Select a student.",
+    );
+  }
+
+  if (!coachStaffProfileId) {
+    throw new Error(
+      "Select a coach.",
+    );
+  }
+
+  if (!developmentArea?.trim()) {
+    throw new Error(
+      "Enter the development area.",
+    );
+  }
+
+  if (!goal?.trim()) {
+    throw new Error(
+      "Enter the coaching goal.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "assign_student_to_coach",
+      {
+        p_student_profile_id:
+          studentProfileId,
+
+        p_coach_staff_profile_id:
+          coachStaffProfileId,
+
+        p_development_area:
+          developmentArea.trim(),
+
+        p_goal:
+          goal.trim(),
+
+        p_current_position:
+          cleanOptionalText(
+            currentPosition,
+          ),
+
+        p_practice_plan:
+          cleanOptionalText(
+            practicePlan,
+          ),
+
+        p_target_date:
+          targetDate || null,
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function closeCoachingAssignment({
+  assignmentId,
+  closingStatus,
+  closingNotes,
+}) {
+  if (!assignmentId) {
+    throw new Error(
+      "Select a coaching assignment.",
+    );
+  }
+
+  const allowedStatuses = [
+    "completed",
+    "cancelled",
+  ];
+
+  const selectedStatus =
+    closingStatus || "completed";
+
+  if (
+    !allowedStatuses.includes(
+      selectedStatus,
+    )
+  ) {
+    throw new Error(
+      "Select a valid closing status.",
+    );
+  }
+
+  if (!closingNotes?.trim()) {
+    throw new Error(
+      "Enter closing notes.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "close_coaching_assignment",
+      {
+        p_assignment_id:
+          assignmentId,
+
+        p_closing_status:
+          selectedStatus,
+
+        p_closing_notes:
+          closingNotes.trim(),
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
 function cleanOptionalText(value) {
   const cleaned =
     value?.trim();

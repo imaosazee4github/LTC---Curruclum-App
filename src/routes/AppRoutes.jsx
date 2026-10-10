@@ -20,6 +20,12 @@ import StudentProfilePage from "../pages/student/StudentProfilePage";
 import MentorDashboardPage from "../pages/mentor/MentorDashboardPage";
 import MentorMenteesPage from "../pages/mentor/MentorMenteesPage";
 import MentorReportsPage from "../pages/mentor-department/MentorReportsPage";
+import CoachDashboardPage from "../pages/coach/CoachDashboardPage";
+import CoachAssignmentsPage from "../pages/coach/CoachAssignmentsPage";
+import CoachFollowUpsPage from "../pages/coach/CoachFollowUpsPage";
+import CoachingAssignmentsPage from "../pages/super-admin/CoachingAssignmentsPage";
+import RecordCoachingPage from "../pages/coach/RecordCoachingPage";
+import StudentCoachingRecordPage from "../pages/coach/StudentCoachingRecordPage";
 
 export default function AppRoutes() {
   return (
@@ -131,15 +137,67 @@ export default function AppRoutes() {
       />
 
       <Route
-  path="/super-admin/learning-areas"
-  element={
-    <ProtectedRoute
-      allowedRoles={["super_admin"]}
-    >
-      <CourseManagementPage />
-    </ProtectedRoute>
-  }
-/>
+        path="/super-admin/learning-areas"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <CourseManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/coach/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["coach"]}>
+            <CoachDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/coach/records"
+        element={
+          <ProtectedRoute allowedRoles={["coach"]}>
+            <StudentCoachingRecordPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/coach/follow-ups"
+        element={
+          <ProtectedRoute allowedRoles={["coach"]}>
+            <CoachFollowUpsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/coach/assignments"
+        element={
+          <ProtectedRoute allowedRoles={["coach"]}>
+            <CoachAssignmentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/coaching-assignments"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <CoachingAssignmentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/coach/record"
+        element={
+          <ProtectedRoute allowedRoles={["coach"]}>
+            <RecordCoachingPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
