@@ -12,14 +12,9 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  NavLink,
-  useNavigate,
-} from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
 import { useAuth } from "../hooks/useAuth";
 
@@ -38,8 +33,7 @@ const navigation = [
   },
   {
     label: "Learning Areas",
-    path:
-      "/super-admin/learning-areas",
+    path: "/super-admin/learning-areas",
     icon: BookOpen,
     available: true,
   },
@@ -50,11 +44,10 @@ const navigation = [
     available: false,
   },
   {
-    label: "Student Assignments",
-    path:
-      "/super-admin/assignments",
+    label: "Coaching Assignments",
+    path: "/super-admin/coaching-assignments",
     icon: UserRoundCog,
-    available: false,
+    available: true,
   },
   {
     label: "Reports & Oversight",
@@ -70,18 +63,12 @@ const navigation = [
   },
 ];
 
-export default function SuperAdminLayout({
-  children,
-}) {
-  const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+export default function SuperAdminLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
 
-  const {
-    profile,
-    signOut,
-  } = useAuth();
+  const { profile, signOut } = useAuth();
 
   async function handleSignOut() {
     try {
@@ -91,19 +78,13 @@ export default function SuperAdminLayout({
         replace: true,
       });
     } catch (error) {
-      console.error(
-        "Super Admin sign out failed:",
-        error,
-      );
+      console.error("Super Admin sign out failed:", error);
     }
   }
 
-  const displayName =
-    profile?.full_name ||
-    "Super Administrator";
+  const displayName = profile?.full_name || "Super Administrator";
 
-  const initials =
-    getInitials(displayName);
+  const initials = getInitials(displayName);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -111,26 +92,20 @@ export default function SuperAdminLayout({
         <button
           type="button"
           aria-label="Close navigation"
-          onClick={() =>
-            setSidebarOpen(false)
-          }
+          onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden"
         />
       ) : null}
 
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-slate-950 text-white transition-transform duration-200 lg:translate-x-0 ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex h-20 items-center justify-between border-b border-slate-800 px-5">
           <NavLink
             to="/super-admin/dashboard"
-            onClick={() =>
-              setSidebarOpen(false)
-            }
+            onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white font-bold text-blue-950">
@@ -138,9 +113,7 @@ export default function SuperAdminLayout({
             </div>
 
             <div>
-              <p className="font-bold">
-                Super Admin Portal
-              </p>
+              <p className="font-bold">Super Admin Portal</p>
 
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
                 System Administration
@@ -151,9 +124,7 @@ export default function SuperAdminLayout({
           <button
             type="button"
             aria-label="Close sidebar"
-            onClick={() =>
-              setSidebarOpen(false)
-            }
+            onClick={() => setSidebarOpen(false)}
             className="rounded-lg p-2 text-slate-300 hover:bg-slate-800 lg:hidden"
           >
             <X size={21} />
@@ -167,13 +138,9 @@ export default function SuperAdminLayout({
             </div>
 
             <div className="min-w-0">
-              <p className="truncate font-semibold">
-                {displayName}
-              </p>
+              <p className="truncate font-semibold">{displayName}</p>
 
-              <p className="text-sm text-slate-400">
-                Super Administrator
-              </p>
+              <p className="text-sm text-slate-400">Super Administrator</p>
             </div>
           </div>
         </div>
@@ -188,9 +155,7 @@ export default function SuperAdminLayout({
               <NavigationItem
                 key={item.path}
                 item={item}
-                onNavigate={() =>
-                  setSidebarOpen(false)
-                }
+                onNavigate={() => setSidebarOpen(false)}
               />
             ))}
           </div>
@@ -214,22 +179,16 @@ export default function SuperAdminLayout({
             <button
               type="button"
               aria-label="Open sidebar"
-              onClick={() =>
-                setSidebarOpen(true)
-              }
+              onClick={() => setSidebarOpen(true)}
               className="rounded-lg border border-slate-200 p-2 text-slate-700 lg:hidden"
             >
               <Menu size={22} />
             </button>
 
             <div>
-              <p className="text-sm text-slate-500">
-                LTC Pioneer Programme
-              </p>
+              <p className="text-sm text-slate-500">LTC Pioneer Programme</p>
 
-              <p className="font-semibold text-blue-950">
-                Super Admin Portal
-              </p>
+              <p className="font-semibold text-blue-950">Super Admin Portal</p>
             </div>
           </div>
 
@@ -249,9 +208,7 @@ export default function SuperAdminLayout({
                 {displayName}
               </p>
 
-              <p className="text-xs text-slate-500">
-                Super Administrator
-              </p>
+              <p className="text-xs text-slate-500">Super Administrator</p>
             </div>
 
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">
@@ -266,10 +223,7 @@ export default function SuperAdminLayout({
   );
 }
 
-function NavigationItem({
-  item,
-  onNavigate,
-}) {
+function NavigationItem({ item, onNavigate }) {
   const Icon = item.icon;
 
   if (!item.available) {

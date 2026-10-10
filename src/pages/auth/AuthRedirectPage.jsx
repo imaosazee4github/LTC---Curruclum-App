@@ -9,6 +9,9 @@ const roleDashboardPaths = {
   student:
     "/student/dashboard",
 
+  coach:
+    "/coach/dashboard",
+
   instructor:
     "/instructor/dashboard",
 
