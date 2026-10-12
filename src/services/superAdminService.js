@@ -149,6 +149,7 @@ export async function assignStaffRole({
   specialization,
   biography,
   availabilityStatus,
+  supervisorType,
 }) {
   if (!profileId) {
     throw new Error(
@@ -190,6 +191,22 @@ export async function assignStaffRole({
     );
   }
 
+  const allowedSupervisorTypes = [
+    "service_coordinator",
+    "site_supervisor",
+  ];
+
+  if (
+    role === "supervisor" &&
+    !allowedSupervisorTypes.includes(
+      supervisorType,
+    )
+  ) {
+    throw new Error(
+      "Select a supervisor type.",
+    );
+  }
+
   const { data, error } =
     await supabase.rpc(
       "assign_staff_role",
@@ -222,6 +239,11 @@ export async function assignStaffRole({
 
         p_availability_status:
           selectedAvailability,
+
+        p_supervisor_type:
+          role === "supervisor"
+            ? supervisorType
+            : null,
       },
     );
 
@@ -231,6 +253,8 @@ export async function assignStaffRole({
 
   return data;
 }
+
+
 
 function normalizeStaffSummary(summary) {
   return {
@@ -650,6 +674,538 @@ export async function closeCoachingAssignment({
   }
 
   return data;
+}
+
+
+
+export async function getLearningExperienceManagementData() {
+  const [
+    managementResult,
+    cohortResult,
+  ] = await Promise.all([
+    supabase.rpc(
+      "get_learning_experience_management_data",
+    ),
+
+    supabase.rpc(
+      "get_learning_experience_cohort_options",
+    ),
+  ]);
+
+  if (managementResult.error) {
+    throw new Error(
+      managementResult.error.message,
+    );
+  }
+
+  if (cohortResult.error) {
+    throw new Error(
+      cohortResult.error.message,
+    );
+  }
+
+  const managementData =
+    managementResult.data;
+
+  const cohortData =
+    cohortResult.data;
+
+  return {
+    success:
+      Boolean(
+        managementData?.success,
+      ) &&
+      Boolean(
+        cohortData?.success,
+      ),
+
+    summary:
+      normalizeLearningExperienceSummary(
+        managementData?.summary,
+      ),
+
+    experiences:
+      Array.isArray(
+        managementData?.experiences,
+      )
+        ? managementData.experiences
+        : [],
+
+    facilitators:
+      Array.isArray(
+        managementData?.facilitators,
+      )
+        ? managementData.facilitators
+        : [],
+
+    cohorts:
+      Array.isArray(
+        cohortData?.cohorts,
+      )
+        ? cohortData.cohorts
+        : [],
+  };
+}
+
+
+export async function createLearningExperience({
+  code,
+  title,
+  description,
+  learningObjectives,
+  cohortId,
+  deliveryMode,
+  location,
+  startDate,
+  endDate,
+  status,
+  enrollCohortStudents = true,
+}) {
+  if (!code?.trim()) {
+    throw new Error(
+      "Enter a learning-experience code.",
+    );
+  }
+
+  if (!title?.trim()) {
+    throw new Error(
+      "Enter a learning-experience title.",
+    );
+  }
+
+  const allowedDeliveryModes = [
+    "in_person",
+    "online",
+    "hybrid",
+  ];
+
+  const selectedDeliveryMode =
+    deliveryMode || "in_person";
+
+  if (
+    !allowedDeliveryModes.includes(
+      selectedDeliveryMode,
+    )
+  ) {
+    throw new Error(
+      "Select a valid delivery mode.",
+    );
+  }
+
+  const allowedStatuses = [
+    "planned",
+    "active",
+    "completed",
+    "cancelled",
+    "inactive",
+  ];
+
+  const selectedStatus =
+    status || "planned";
+
+  if (
+    !allowedStatuses.includes(
+      selectedStatus,
+    )
+  ) {
+    throw new Error(
+      "Select a valid learning-experience status.",
+    );
+  }
+
+  if (
+    startDate &&
+    endDate &&
+    endDate < startDate
+  ) {
+    throw new Error(
+      "The end date cannot be earlier than the start date.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "create_learning_experience",
+      {
+        p_code:
+          code.trim(),
+
+        p_title:
+          title.trim(),
+
+        p_description:
+          cleanOptionalText(
+            description,
+          ),
+
+        p_learning_objectives:
+          cleanOptionalText(
+            learningObjectives,
+          ),
+
+        p_cohort_id:
+          cohortId || null,
+
+        p_delivery_mode:
+          selectedDeliveryMode,
+
+        p_location:
+          cleanOptionalText(
+            location,
+          ),
+
+        p_start_date:
+          startDate || null,
+
+        p_end_date:
+          endDate || null,
+
+        p_status:
+          selectedStatus,
+
+        p_enroll_cohort_students:
+          Boolean(
+            enrollCohortStudents,
+          ),
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function assignFacilitatorToLearningExperience({
+  learningExperienceId,
+  facilitatorStaffProfileId,
+  assignmentRole,
+  notes,
+}) {
+  if (!learningExperienceId) {
+    throw new Error(
+      "Select a learning experience.",
+    );
+  }
+
+  if (!facilitatorStaffProfileId) {
+    throw new Error(
+      "Select a facilitator.",
+    );
+  }
+
+  const allowedRoles = [
+    "lead_facilitator",
+    "facilitator",
+    "assistant_facilitator",
+  ];
+
+  const selectedRole =
+    assignmentRole ||
+    "facilitator";
+
+  if (
+    !allowedRoles.includes(
+      selectedRole,
+    )
+  ) {
+    throw new Error(
+      "Select a valid assignment role.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "assign_facilitator_to_learning_experience",
+      {
+        p_learning_experience_id:
+          learningExperienceId,
+
+        p_facilitator_staff_profile_id:
+          facilitatorStaffProfileId,
+
+        p_assignment_role:
+          selectedRole,
+
+        p_notes:
+          cleanOptionalText(
+            notes,
+          ),
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function closeLearningExperienceFacilitatorAssignment({
+  assignmentId,
+  closingStatus,
+  closingNotes,
+}) {
+  if (!assignmentId) {
+    throw new Error(
+      "Select a facilitator assignment.",
+    );
+  }
+
+  const allowedStatuses = [
+    "completed",
+    "inactive",
+  ];
+
+  const selectedStatus =
+    closingStatus || "completed";
+
+  if (
+    !allowedStatuses.includes(
+      selectedStatus,
+    )
+  ) {
+    throw new Error(
+      "Select a valid closing status.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "close_learning_experience_facilitator_assignment",
+      {
+        p_assignment_id:
+          assignmentId,
+
+        p_closing_status:
+          selectedStatus,
+
+        p_closing_notes:
+          cleanOptionalText(
+            closingNotes,
+          ),
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function createLearningExperienceSession({
+  learningExperienceId,
+  title,
+  sessionDate,
+  startTime,
+  endTime,
+  sessionNumber,
+  topic,
+  learningObjectives,
+  deliveryMode,
+  location,
+  status,
+  notes,
+}) {
+  if (!learningExperienceId) {
+    throw new Error(
+      "Select a learning experience.",
+    );
+  }
+
+  if (!title?.trim()) {
+    throw new Error(
+      "Enter a session title.",
+    );
+  }
+
+  if (!sessionDate) {
+    throw new Error(
+      "Select a session date.",
+    );
+  }
+
+  if (!startTime) {
+    throw new Error(
+      "Enter the session start time.",
+    );
+  }
+
+  if (!endTime) {
+    throw new Error(
+      "Enter the session end time.",
+    );
+  }
+
+  if (endTime <= startTime) {
+    throw new Error(
+      "The end time must be later than the start time.",
+    );
+  }
+
+  const allowedDeliveryModes = [
+    "in_person",
+    "online",
+    "hybrid",
+  ];
+
+  const selectedDeliveryMode =
+    deliveryMode || "in_person";
+
+  if (
+    !allowedDeliveryModes.includes(
+      selectedDeliveryMode,
+    )
+  ) {
+    throw new Error(
+      "Select a valid delivery mode.",
+    );
+  }
+
+  const allowedStatuses = [
+    "scheduled",
+    "in_progress",
+    "completed",
+    "cancelled",
+  ];
+
+  const selectedStatus =
+    status || "scheduled";
+
+  if (
+    !allowedStatuses.includes(
+      selectedStatus,
+    )
+  ) {
+    throw new Error(
+      "Select a valid session status.",
+    );
+  }
+
+  const parsedSessionNumber =
+    sessionNumber
+      ? Number(sessionNumber)
+      : null;
+
+  if (
+    parsedSessionNumber !== null &&
+    (
+      !Number.isInteger(
+        parsedSessionNumber,
+      ) ||
+      parsedSessionNumber < 1
+    )
+  ) {
+    throw new Error(
+      "Session number must be a positive whole number.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "create_learning_experience_session",
+      {
+        p_learning_experience_id:
+          learningExperienceId,
+
+        p_title:
+          title.trim(),
+
+        p_session_date:
+          sessionDate,
+
+        p_start_time:
+          startTime,
+
+        p_end_time:
+          endTime,
+
+        p_session_number:
+          parsedSessionNumber,
+
+        p_topic:
+          cleanOptionalText(
+            topic,
+          ),
+
+        p_learning_objectives:
+          cleanOptionalText(
+            learningObjectives,
+          ),
+
+        p_delivery_mode:
+          selectedDeliveryMode,
+
+        p_location:
+          cleanOptionalText(
+            location,
+          ),
+
+        p_status:
+          selectedStatus,
+
+        p_notes:
+          cleanOptionalText(
+            notes,
+          ),
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+function normalizeLearningExperienceSummary(
+  summary,
+) {
+  return {
+    totalExperiences:
+      Number(
+        summary?.totalExperiences,
+      ) || 0,
+
+    plannedExperiences:
+      Number(
+        summary?.plannedExperiences,
+      ) || 0,
+
+    activeExperiences:
+      Number(
+        summary?.activeExperiences,
+      ) || 0,
+
+    completedExperiences:
+      Number(
+        summary?.completedExperiences,
+      ) || 0,
+
+    totalActiveAssignments:
+      Number(
+        summary
+          ?.totalActiveAssignments,
+      ) || 0,
+
+    totalEnrolledStudents:
+      Number(
+        summary
+          ?.totalEnrolledStudents,
+      ) || 0,
+
+    totalSessions:
+      Number(
+        summary?.totalSessions,
+      ) || 0,
+
+    activeFacilitators:
+      Number(
+        summary?.activeFacilitators,
+      ) || 0,
+  };
 }
 
 function cleanOptionalText(value) {

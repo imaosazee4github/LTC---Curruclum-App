@@ -1,19 +1,11 @@
 import {
   BookOpen,
-  GraduationCap,
   Plus,
-  UserRoundCheck,
-  Users,
 } from "lucide-react";
 
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
-import {
-  useCourseManagement,
-} from "../../hooks/useCourseManagement";
-
+import { useCourseManagement } from "../../hooks/useCourseManagement";
 import SuperAdminLayout from "../../layouts/SuperAdminLayout";
 
 const initialCourseForm = {
@@ -23,13 +15,7 @@ const initialCourseForm = {
   learningArea: "",
   competencyBucket:
     "foundational_competencies",
-  status: "planned",
-};
-
-const initialAssignmentForm = {
-  courseId: "",
-  staffProfileId: "",
-  assignmentRole: "instructor",
+  status: "active",
 };
 
 export default function CourseManagementPage() {
@@ -41,36 +27,16 @@ export default function CourseManagementPage() {
     creatingCourse,
     createCourseError,
     resetCreateCourse,
-    assignInstructor,
-    assigningInstructor,
-    assignInstructorError,
-    resetAssignInstructor,
-    closeInstructorAssignment,
-    closingInstructorAssignment,
   } = useCourseManagement();
 
-  const [
-    courseForm,
-    setCourseForm,
-  ] = useState(initialCourseForm);
+  const [courseForm, setCourseForm] =
+    useState(initialCourseForm);
 
-  const [
-    assignmentForm,
-    setAssignmentForm,
-  ] = useState(
-    initialAssignmentForm,
-  );
-
-  const [
-    successMessage,
-    setSuccessMessage,
-  ] = useState("");
+  const [successMessage, setSuccessMessage] =
+    useState("");
 
   function handleCourseChange(event) {
-    const {
-      name,
-      value,
-    } = event.target;
+    const { name, value } = event.target;
 
     setCourseForm((current) => ({
       ...current,
@@ -81,40 +47,16 @@ export default function CourseManagementPage() {
     resetCreateCourse();
   }
 
-  function handleAssignmentChange(
-    event,
-  ) {
-    const {
-      name,
-      value,
-    } = event.target;
-
-    setAssignmentForm(
-      (current) => ({
-        ...current,
-        [name]: value,
-      }),
-    );
-
-    setSuccessMessage("");
-    resetAssignInstructor();
-  }
-
-  async function handleCreateCourse(
-    event,
-  ) {
+  async function handleCreateCourse(event) {
     event.preventDefault();
     setSuccessMessage("");
 
     try {
-      const result =
-        await createCourse(
-          courseForm,
-        );
-
-      setCourseForm(
-        initialCourseForm,
+      const result = await createCourse(
+        courseForm,
       );
+
+      setCourseForm(initialCourseForm);
 
       setSuccessMessage(
         result?.message ||
@@ -125,65 +67,10 @@ export default function CourseManagementPage() {
     }
   }
 
-  async function handleAssignInstructor(
-    event,
-  ) {
-    event.preventDefault();
-    setSuccessMessage("");
-
-    try {
-      const result =
-        await assignInstructor(
-          assignmentForm,
-        );
-
-      setAssignmentForm(
-        initialAssignmentForm,
-      );
-
-      setSuccessMessage(
-        result?.message ||
-          "The instructor was assigned successfully.",
-      );
-    } catch {
-      // The mutation exposes the error.
-    }
-  }
-
-  async function handleCloseAssignment(
-    assignmentId,
-  ) {
-    const confirmed =
-      window.confirm(
-        "Remove this instructor from the course?",
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setSuccessMessage("");
-
-    try {
-      const result =
-        await closeInstructorAssignment({
-          assignmentId,
-          closingStatus: "inactive",
-        });
-
-      setSuccessMessage(
-        result?.message ||
-          "The instructor assignment was closed.",
-      );
-    } catch {
-      // The mutation exposes the error.
-    }
-  }
-
   if (courseManagementLoading) {
     return (
       <SuperAdminLayout>
-        <PageMessage message="Loading courses and instructors..." />
+        <PageMessage message="Loading courses..." />
       </SuperAdminLayout>
     );
   }
@@ -197,8 +84,7 @@ export default function CourseManagementPage() {
         <PageMessage
           error
           message={
-            courseManagementError
-              ?.message ||
+            courseManagementError?.message ||
             "Course management data could not be loaded."
           }
         />
@@ -206,11 +92,8 @@ export default function CourseManagementPage() {
     );
   }
 
-  const {
-    summary,
-    courses,
-    instructors,
-  } = courseManagement;
+  const { summary, courses } =
+    courseManagement;
 
   return (
     <SuperAdminLayout>
@@ -226,9 +109,9 @@ export default function CourseManagementPage() {
             </h1>
 
             <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-              Create courses and assign
-              appointed instructors to
-              their teaching areas.
+              Create and manage the course
+              catalogue for the LTC Pioneer
+              Programme.
             </p>
           </header>
 
@@ -238,110 +121,44 @@ export default function CourseManagementPage() {
             </div>
           ) : null}
 
-          <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="mt-8 max-w-sm">
             <SummaryCard
               label="Total Courses"
-              value={
-                summary.totalCourses
-              }
+              value={summary.totalCourses}
               icon={BookOpen}
-              tone="blue"
-            />
-
-            <SummaryCard
-              label="Active Courses"
-              value={
-                summary.activeCourses
-              }
-              icon={GraduationCap}
-              tone="green"
-            />
-
-            <SummaryCard
-              label="Available Instructors"
-              value={
-                summary.activeInstructors
-              }
-              icon={Users}
-              tone="purple"
-            />
-
-            <SummaryCard
-              label="Active Assignments"
-              value={
-                summary.activeAssignments
-              }
-              icon={UserRoundCheck}
-              tone="amber"
             />
           </section>
 
-          <div className="mt-8 grid gap-8 xl:grid-cols-2">
+          <div className="mt-8 max-w-3xl">
             <CourseForm
               form={courseForm}
-              onChange={
-                handleCourseChange
-              }
-              onSubmit={
-                handleCreateCourse
-              }
-              submitting={
-                creatingCourse
-              }
-              error={
-                createCourseError
-              }
-            />
-
-            <AssignmentForm
-              form={assignmentForm}
-              courses={courses}
-              instructors={
-                instructors
-              }
-              onChange={
-                handleAssignmentChange
-              }
-              onSubmit={
-                handleAssignInstructor
-              }
-              submitting={
-                assigningInstructor
-              }
-              error={
-                assignInstructorError
-              }
+              onChange={handleCourseChange}
+              onSubmit={handleCreateCourse}
+              submitting={creatingCourse}
+              error={createCourseError}
             />
           </div>
 
           <section className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 px-5 py-5">
               <h2 className="text-xl font-bold text-slate-950">
-                Course Directory
+                Course Catalogue
               </h2>
 
               <p className="mt-1 text-sm text-slate-600">
-                Courses and their
-                instructor assignments.
+                Courses available for classes
+                and cohort scheduling.
               </p>
             </div>
 
             {courses.length > 0 ? (
               <div className="grid gap-5 p-5 lg:grid-cols-2">
-                {courses.map(
-                  (course) => (
-                    <CourseCard
-                      key={course.id}
-                      course={course}
-                      closing={
-                        closingInstructorAssignment
-                      }
-                      onClose={
-                        handleCloseAssignment
-                      }
-                    />
-                  ),
-                )}
+                {courses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                  />
+                ))}
               </div>
             ) : (
               <div className="p-10 text-center">
@@ -352,9 +169,8 @@ export default function CourseManagementPage() {
                 </h3>
 
                 <p className="mt-2 text-sm text-slate-500">
-                  Use the course form to
-                  create the first learning
-                  area.
+                  Use the form to create the
+                  first course.
                 </p>
               </div>
             )}
@@ -388,8 +204,8 @@ function CourseForm({
           </h2>
 
           <p className="text-sm text-slate-500">
-            Add a new subject or
-            learning area.
+            Add a subject or learning area to
+            the course catalogue.
           </p>
         </div>
       </div>
@@ -418,9 +234,7 @@ function CourseForm({
         <Field
           label="Learning Area"
           name="learningArea"
-          value={
-            form.learningArea
-          }
+          value={form.learningArea}
           onChange={onChange}
           placeholder="Digital Literacy"
         />
@@ -441,17 +255,15 @@ function CourseForm({
         />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4">
         <SelectField
           label="Competency Bucket"
           name="competencyBucket"
-          value={
-            form.competencyBucket
-          }
+          value={form.competencyBucket}
           onChange={onChange}
         >
           <option value="formation_and_guided_learning">
-            Formation & Guided Learning
+            Formation &amp; Guided Learning
           </option>
 
           <option value="foundational_competencies">
@@ -462,35 +274,10 @@ function CourseForm({
             Applied Experiences
           </option>
         </SelectField>
-
-        <SelectField
-          label="Course Status"
-          name="status"
-          value={form.status}
-          onChange={onChange}
-        >
-          <option value="planned">
-            Planned
-          </option>
-
-          <option value="active">
-            Active
-          </option>
-
-          <option value="inactive">
-            Inactive
-          </option>
-
-          <option value="archived">
-            Archived
-          </option>
-        </SelectField>
       </div>
 
       {error ? (
-        <ErrorMessage
-          message={error.message}
-        />
+        <ErrorMessage message={error.message} />
       ) : null}
 
       <button
@@ -506,190 +293,21 @@ function CourseForm({
   );
 }
 
-function AssignmentForm({
-  form,
-  courses,
-  instructors,
-  onChange,
-  onSubmit,
-  submitting,
-  error,
-}) {
-  const availableCourses =
-    courses.filter(
-      (course) =>
-        course.status !==
-        "archived",
-    );
-
-  return (
-    <form
-      onSubmit={onSubmit}
-      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-    >
-      <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-purple-100 p-3 text-purple-700">
-          <UserRoundCheck className="h-5 w-5" />
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-slate-950">
-            Assign Instructor
-          </h2>
-
-          <p className="text-sm text-slate-500">
-            Connect an instructor to a
-            course.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-6 space-y-4">
-        <SelectField
-          label="Course"
-          name="courseId"
-          value={form.courseId}
-          onChange={onChange}
-          required
-        >
-          <option value="">
-            Select a course
-          </option>
-
-          {availableCourses.map(
-            (course) => (
-              <option
-                key={course.id}
-                value={course.id}
-              >
-                {course.code} —{" "}
-                {course.title}
-              </option>
-            ),
-          )}
-        </SelectField>
-
-        <SelectField
-          label="Instructor"
-          name="staffProfileId"
-          value={
-            form.staffProfileId
-          }
-          onChange={onChange}
-          required
-        >
-          <option value="">
-            Select an instructor
-          </option>
-
-          {instructors.map(
-            (instructor) => (
-              <option
-                key={
-                  instructor
-                    .staff_profile_id
-                }
-                value={
-                  instructor
-                    .staff_profile_id
-                }
-              >
-                {instructor.full_name ||
-                  instructor.email}
-                {" — "}
-                {instructor.specialization ||
-                  "General"}
-              </option>
-            ),
-          )}
-        </SelectField>
-
-        <SelectField
-          label="Assignment Role"
-          name="assignmentRole"
-          value={
-            form.assignmentRole
-          }
-          onChange={onChange}
-          required
-        >
-          <option value="lead_instructor">
-            Lead Instructor
-          </option>
-
-          <option value="instructor">
-            Instructor
-          </option>
-
-          <option value="assistant_instructor">
-            Assistant Instructor
-          </option>
-        </SelectField>
-      </div>
-
-      {error ? (
-        <ErrorMessage
-          message={error.message}
-        />
-      ) : null}
-
-      <button
-        type="submit"
-        disabled={
-          submitting ||
-          availableCourses.length ===
-            0 ||
-          instructors.length === 0
-        }
-        className="mt-6 w-full rounded-lg bg-purple-700 px-4 py-3 font-semibold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {submitting
-          ? "Assigning Instructor..."
-          : "Assign Instructor"}
-      </button>
-    </form>
-  );
-}
-
-function CourseCard({
-  course,
-  closing,
-  onClose,
-}) {
-  const activeInstructors =
-    Array.isArray(
-      course.instructors,
-    )
-      ? course.instructors.filter(
-          (instructor) =>
-            instructor
-              .assignment_status ===
-            "active",
-        )
-      : [];
-
+function CourseCard({ course }) {
   return (
     <article className="rounded-xl border border-slate-200 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-blue-700">
-            {course.code}
-          </p>
+      <p className="text-sm font-bold uppercase tracking-wider text-blue-700">
+        {course.code}
+      </p>
 
-          <h3 className="mt-1 text-lg font-bold text-slate-950">
-            {course.title}
-          </h3>
+      <h3 className="mt-1 text-lg font-bold text-slate-950">
+        {course.title}
+      </h3>
 
-          <p className="mt-1 text-sm text-slate-500">
-            {course.learning_area ||
-              "Learning area not specified"}
-          </p>
-        </div>
-
-        <StatusBadge
-          status={course.status}
-        />
-      </div>
+      <p className="mt-1 text-sm text-slate-500">
+        {course.learning_area ||
+          "Learning area not specified"}
+      </p>
 
       {course.description ? (
         <p className="mt-4 text-sm leading-6 text-slate-600">
@@ -699,58 +317,14 @@ function CourseCard({
 
       <div className="mt-5 border-t border-slate-200 pt-4">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-          Assigned Instructors
+          Competency Bucket
         </p>
 
-        {activeInstructors.length >
-        0 ? (
-          <div className="mt-3 space-y-3">
-            {activeInstructors.map(
-              (instructor) => (
-                <div
-                  key={
-                    instructor
-                      .assignment_id
-                  }
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 p-3"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-900">
-                      {instructor.full_name ||
-                        instructor.email}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      {formatLabel(
-                        instructor
-                          .assignment_role,
-                      )}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={closing}
-                    onClick={() =>
-                      onClose(
-                        instructor
-                          .assignment_id,
-                      )
-                    }
-                    className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ),
-            )}
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-slate-500">
-            No active instructor
-            assigned.
-          </p>
-        )}
+        <p className="mt-2 text-sm font-semibold text-slate-800">
+          {formatLabel(
+            course.competency_bucket,
+          )}
+        </p>
       </div>
     </article>
   );
@@ -760,19 +334,7 @@ function SummaryCard({
   label,
   value,
   icon: Icon,
-  tone,
 }) {
-  const tones = {
-    blue:
-      "bg-blue-100 text-blue-700",
-    green:
-      "bg-emerald-100 text-emerald-700",
-    purple:
-      "bg-purple-100 text-purple-700",
-    amber:
-      "bg-amber-100 text-amber-700",
-  };
-
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
@@ -786,9 +348,7 @@ function SummaryCard({
           </p>
         </div>
 
-        <div
-          className={`rounded-xl p-3 ${tones[tone]}`}
-        >
+        <div className="rounded-xl bg-blue-100 p-3 text-blue-700">
           <Icon className="h-6 w-6" />
         </div>
       </div>
@@ -798,17 +358,23 @@ function SummaryCard({
 
 function Field({
   label,
-  ...inputProps
+  name,
+  value,
+  onChange,
+  placeholder,
+  required = false,
 }) {
   return (
-    <label className="block">
-      <span className="text-sm font-semibold text-slate-700">
-        {label}
-      </span>
+    <label className="block text-sm font-semibold text-slate-700">
+      {label}
 
       <input
-        {...inputProps}
-        className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 font-normal outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
       />
     </label>
   );
@@ -816,18 +382,20 @@ function Field({
 
 function SelectField({
   label,
+  name,
+  value,
+  onChange,
   children,
-  ...selectProps
 }) {
   return (
-    <label className="block">
-      <span className="text-sm font-semibold text-slate-700">
-        {label}
-      </span>
+    <label className="block text-sm font-semibold text-slate-700">
+      {label}
 
       <select
-        {...selectProps}
-        className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 font-normal outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
       >
         {children}
       </select>
@@ -835,39 +403,11 @@ function SelectField({
   );
 }
 
-function ErrorMessage({
-  message,
-}) {
+function ErrorMessage({ message }) {
   return (
-    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {message}
     </div>
-  );
-}
-
-function StatusBadge({
-  status,
-}) {
-  const styles = {
-    active:
-      "bg-emerald-100 text-emerald-700",
-    planned:
-      "bg-blue-100 text-blue-700",
-    inactive:
-      "bg-slate-200 text-slate-700",
-    archived:
-      "bg-amber-100 text-amber-800",
-  };
-
-  return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
-        styles[status] ||
-        styles.inactive
-      }`}
-    >
-      {formatLabel(status)}
-    </span>
   );
 }
 
@@ -876,17 +416,17 @@ function PageMessage({
   error = false,
 }) {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center p-6">
+    <main className="p-5 md:p-8">
       <div
-        className={`max-w-xl rounded-xl border px-6 py-5 text-center ${
+        className={`mx-auto max-w-3xl rounded-xl border px-5 py-6 ${
           error
             ? "border-red-200 bg-red-50 text-red-700"
-            : "border-slate-200 bg-white text-slate-700"
+            : "border-slate-200 bg-white text-slate-600"
         }`}
       >
         {message}
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -896,11 +436,8 @@ function formatLabel(value) {
   }
 
   return String(value)
-    .split("_")
-    .map(
-      (word) =>
-        word.charAt(0).toUpperCase() +
-        word.slice(1),
-    )
-    .join(" ");
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) =>
+      letter.toUpperCase(),
+    );
 }

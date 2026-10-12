@@ -15,6 +15,12 @@ const roleDashboardPaths = {
   instructor:
     "/instructor/dashboard",
 
+  facilitator:
+    "/facilitator/dashboard",
+
+  supervisor:
+    "/supervisor/dashboard",
+
   mentor_department:
     "/mentor-department/dashboard",
 

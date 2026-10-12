@@ -2,6 +2,10 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 
+import SupervisorDashboardPage from "../pages/supervisor/SupervisorDashboardPage";
+import ServiceStudentAssignmentsPage from "../pages/supervisor/ServiceStudentAssignmentsPage";
+import ServiceAttendancePage from "../pages/supervisor/ServiceAttendancePage";
+import StudentServiceWorkRecordsPage from "../pages/supervisor/StudentServiceWorkRecordsPage";
 import CourseManagementPage from "../pages/super-admin/CourseManagementPage";
 import StaffManagementPage from "../pages/super-admin/StaffManagementPage";
 import SuperAdminDashboardPage from "../pages/super-admin/SuperAdminDashboardPage";
@@ -26,6 +30,14 @@ import CoachFollowUpsPage from "../pages/coach/CoachFollowUpsPage";
 import CoachingAssignmentsPage from "../pages/super-admin/CoachingAssignmentsPage";
 import RecordCoachingPage from "../pages/coach/RecordCoachingPage";
 import StudentCoachingRecordPage from "../pages/coach/StudentCoachingRecordPage";
+import FacilitatorDashboardPage from "../pages/facilitator/FacilitatorDashboardPage";
+import ClassesSchedulesPage from "../pages/super-admin/ClassesSchedulesPage";
+import StaffAllocationsPage from "../pages/super-admin/StaffAllocationsPage";
+import ServiceOversightPage from "../pages/super-admin/ServiceOversightPage";
+import InstructorOversightPage from "../pages/super-admin/InstructorOversightPage";
+import FacilitatorOversightPage from "../pages/super-admin/FacilitatorOversightPage";
+import CoachOversightPage from "../pages/super-admin/CoachOversightPage";
+import ServiceProjectsPage from "../pages/supervisor/ServiceProjectsPage";
 
 export default function AppRoutes() {
   return (
@@ -73,6 +85,62 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/facilitator/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["facilitator"]}>
+            <FacilitatorDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/supervisor/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <SupervisorDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/supervisor/projects"
+        element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <ServiceProjectsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/supervisor/student-assignments"
+        element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <ServiceStudentAssignmentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+
+      <Route
+        path="/supervisor/attendance"
+        element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <ServiceAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/supervisor/work-records"
+        element={
+          <ProtectedRoute allowedRoles={["supervisor"]}>
+            <StudentServiceWorkRecordsPage />
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/mentor-department/dashboard"
@@ -127,11 +195,38 @@ export default function AppRoutes() {
         }
       />
 
+      {/* <Route
+        path="/super-admin/learning-experiences"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <LearningExperienceManagementPage />
+          </ProtectedRoute>
+        }
+      /> */}
+
       <Route
         path="/super-admin/staff"
         element={
           <ProtectedRoute allowedRoles={["super_admin"]}>
             <StaffManagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/staff-allocations"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <StaffAllocationsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/classes"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <ClassesSchedulesPage />
           </ProtectedRoute>
         }
       />
@@ -186,6 +281,42 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["super_admin"]}>
             <CoachingAssignmentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/instructor-oversight"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <InstructorOversightPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/facilitator-oversight"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <FacilitatorOversightPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/coach-oversight"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <CoachOversightPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/super-admin/service-oversight"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <ServiceOversightPage />
           </ProtectedRoute>
         }
       />

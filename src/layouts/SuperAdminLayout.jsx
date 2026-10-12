@@ -32,6 +32,12 @@ const navigation = [
     available: true,
   },
   {
+    label: "Staff Allocations",
+    path: "/super-admin/staff-allocations",
+    icon: UserRoundCog,
+    available: true,
+  },
+  {
     label: "Learning Areas",
     path: "/super-admin/learning-areas",
     icon: BookOpen,
@@ -41,7 +47,7 @@ const navigation = [
     label: "Classes & Schedules",
     path: "/super-admin/classes",
     icon: CalendarDays,
-    available: false,
+    available: true,
   },
   {
     label: "Coaching Assignments",
@@ -50,10 +56,28 @@ const navigation = [
     available: true,
   },
   {
-    label: "Reports & Oversight",
-    path: "/super-admin/reports",
+    label: "Instructor Oversight",
+    path: "/super-admin/instructor-oversight",
+    icon: BookOpen,
+    available: true,
+  },
+  {
+    label: "Facilitator Oversight",
+    path: "/super-admin/facilitator-oversight",
+    icon: UsersRound,
+    available: true,
+  },
+  {
+    label: "Coach Oversight",
+    path: "/super-admin/coach-oversight",
+    icon: UserRoundCog,
+    available: true,
+  },
+  {
+    label: "Service Oversight",
+    path: "/super-admin/service-oversight",
     icon: ClipboardList,
-    available: false,
+    available: true,
   },
   {
     label: "System Settings",
