@@ -304,6 +304,50 @@ export async function closeSupervisorProjectAssignment({
   return data;
 }
 
+export async function assignFacilitatorToLearningExperience({
+  learningExperienceId,
+  facilitatorStaffProfileId,
+  assignmentRole,
+  notes,
+}) {
+  if (!learningExperienceId) {
+    throw new Error(
+      "Select a learning experience.",
+    );
+  }
+
+  if (!facilitatorStaffProfileId) {
+    throw new Error(
+      "Select a facilitator.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "assign_facilitator_to_learning_experience",
+      {
+        p_learning_experience_id:
+          learningExperienceId,
+
+        p_facilitator_staff_profile_id:
+          facilitatorStaffProfileId,
+
+        p_assignment_role:
+          assignmentRole ||
+          "facilitator",
+
+        p_notes:
+          notes?.trim() || null,
+      },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
 function cleanOptionalText(value) {
   const cleaned =
     value?.trim();

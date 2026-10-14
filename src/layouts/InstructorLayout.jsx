@@ -1,6 +1,7 @@
 import {
   Bell,
   BookOpen,
+  BookOpenCheck,
   CalendarDays,
   ClipboardList,
   LayoutDashboard,
@@ -11,14 +12,9 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  NavLink,
-  useNavigate,
-} from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
 import { useAuth } from "../hooks/useAuth";
 
@@ -33,49 +29,48 @@ const navigation = [
     label: "My Classes",
     path: "/instructor/classes",
     icon: BookOpen,
-    available: false,
+    available: true,
   },
   {
     label: "My Students",
     path: "/instructor/students",
     icon: Users,
-    available: false,
+    available: true,
   },
   {
     label: "Attendance",
     path: "/instructor/attendance",
     icon: CalendarDays,
-    available: false,
+    available: true,
   },
   {
     label: "Record Learning",
     path: "/instructor/learning",
     icon: ClipboardList,
-    available: false,
+    available: true,
+  },
+  {
+    label: "Weekly Assignments",
+    path: "/instructor/assignments",
+    icon: BookOpenCheck,
+    available: true,
   },
   {
     label: "Follow-Up Needed",
     path: "/instructor/follow-ups",
     icon: ListChecks,
-    available: false,
+    available: true,
   },
 ];
 
-export default function InstructorLayout({
-  children,
-}) {
-  const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+export default function InstructorLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [signingOut, setSigningOut] =
-    useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const navigate = useNavigate();
 
-  const {
-    profile,
-    signOut,
-  } = useAuth();
+  const { profile, signOut } = useAuth();
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -87,21 +82,15 @@ export default function InstructorLayout({
         replace: true,
       });
     } catch (error) {
-      console.error(
-        "Instructor sign out failed:",
-        error,
-      );
+      console.error("Instructor sign out failed:", error);
 
       setSigningOut(false);
     }
   }
 
-  const displayName =
-    profile?.full_name ||
-    "Instructor";
+  const displayName = profile?.full_name || "Instructor";
 
-  const initials =
-    getInitials(displayName);
+  const initials = getInitials(displayName);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -109,26 +98,20 @@ export default function InstructorLayout({
         <button
           type="button"
           aria-label="Close navigation"
-          onClick={() =>
-            setSidebarOpen(false)
-          }
+          onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden"
         />
       ) : null}
 
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-slate-950 text-white transition-transform duration-200 lg:translate-x-0 ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex h-20 items-center justify-between border-b border-slate-800 px-5">
           <NavLink
             to="/instructor/dashboard"
-            onClick={() =>
-              setSidebarOpen(false)
-            }
+            onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white font-bold text-blue-950">
@@ -136,9 +119,7 @@ export default function InstructorLayout({
             </div>
 
             <div>
-              <p className="font-bold">
-                Instructor Portal
-              </p>
+              <p className="font-bold">Instructor Portal</p>
 
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
                 Learning & Progress
@@ -149,9 +130,7 @@ export default function InstructorLayout({
           <button
             type="button"
             aria-label="Close sidebar"
-            onClick={() =>
-              setSidebarOpen(false)
-            }
+            onClick={() => setSidebarOpen(false)}
             className="rounded-lg p-2 text-slate-300 hover:bg-slate-800 lg:hidden"
           >
             <X size={21} />
@@ -167,13 +146,9 @@ export default function InstructorLayout({
             />
 
             <div className="min-w-0">
-              <p className="truncate font-semibold">
-                {displayName}
-              </p>
+              <p className="truncate font-semibold">{displayName}</p>
 
-              <p className="text-sm text-slate-400">
-                Instructor
-              </p>
+              <p className="text-sm text-slate-400">Instructor</p>
             </div>
           </div>
         </div>
@@ -188,9 +163,7 @@ export default function InstructorLayout({
               <NavigationItem
                 key={item.path}
                 item={item}
-                onNavigate={() =>
-                  setSidebarOpen(false)
-                }
+                onNavigate={() => setSidebarOpen(false)}
               />
             ))}
           </div>
@@ -205,9 +178,7 @@ export default function InstructorLayout({
           >
             <LogOut size={18} />
 
-            {signingOut
-              ? "Signing out..."
-              : "Sign Out"}
+            {signingOut ? "Signing out..." : "Sign Out"}
           </button>
         </div>
       </aside>
@@ -218,22 +189,16 @@ export default function InstructorLayout({
             <button
               type="button"
               aria-label="Open sidebar"
-              onClick={() =>
-                setSidebarOpen(true)
-              }
+              onClick={() => setSidebarOpen(true)}
               className="rounded-lg border border-slate-200 p-2 text-slate-700 lg:hidden"
             >
               <Menu size={22} />
             </button>
 
             <div>
-              <p className="text-sm text-slate-500">
-                LTC Pioneer Programme
-              </p>
+              <p className="text-sm text-slate-500">LTC Pioneer Programme</p>
 
-              <p className="font-semibold text-blue-950">
-                Instructor Portal
-              </p>
+              <p className="font-semibold text-blue-950">Instructor Portal</p>
             </div>
           </div>
 
@@ -253,31 +218,20 @@ export default function InstructorLayout({
                 {displayName}
               </p>
 
-              <p className="text-xs text-slate-500">
-                Instructor
-              </p>
+              <p className="text-xs text-slate-500">Instructor</p>
             </div>
 
-            <ProfilePhoto
-              profile={profile}
-              initials={initials}
-              size="header"
-            />
+            <ProfilePhoto profile={profile} initials={initials} size="header" />
           </div>
         </header>
 
-        <div className="min-h-[calc(100vh-5rem)]">
-          {children}
-        </div>
+        <div className="min-h-[calc(100vh-5rem)]">{children}</div>
       </div>
     </div>
   );
 }
 
-function NavigationItem({
-  item,
-  onNavigate,
-}) {
+function NavigationItem({ item, onNavigate }) {
   const Icon = item.icon;
 
   if (!item.available) {
@@ -316,15 +270,8 @@ function NavigationItem({
   );
 }
 
-function ProfilePhoto({
-  profile,
-  initials,
-  size,
-}) {
-  const sizeClass =
-    size === "sidebar"
-      ? "h-11 w-11"
-      : "h-10 w-10";
+function ProfilePhoto({ profile, initials, size }) {
+  const sizeClass = size === "sidebar" ? "h-11 w-11" : "h-10 w-10";
 
   if (profile?.profile_photo_url) {
     return (
@@ -351,9 +298,7 @@ function getInitials(name) {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) =>
-      part.charAt(0),
-    )
+    .map((part) => part.charAt(0))
     .join("")
     .toUpperCase();
 }

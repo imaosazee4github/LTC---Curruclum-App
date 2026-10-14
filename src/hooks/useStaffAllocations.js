@@ -7,6 +7,7 @@ import {
 import { useAuth } from "./useAuth";
 
 import {
+  assignFacilitatorToLearningExperience,
   assignStaffToClass,
   assignSupervisorToProject,
   closeStaffClassAssignment,
@@ -90,6 +91,12 @@ export function useStaffAllocations() {
 
       queryClient.invalidateQueries({
         queryKey: [
+          "learning-experience-management",
+        ],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: [
           "coaching-assignment-options",
         ],
       }),
@@ -149,6 +156,22 @@ export function useStaffAllocations() {
       onError: (error) => {
         console.error(
           "Staff class allocation failed:",
+          error,
+        );
+      },
+    });
+
+      const assignFacilitatorMutation =
+    useMutation({
+      mutationFn:
+        assignFacilitatorToLearningExperience,
+
+      onSuccess:
+        refreshAllocationData,
+
+      onError: (error) => {
+        console.error(
+          "Facilitator learning experience allocation failed:",
           error,
         );
       },
@@ -273,6 +296,18 @@ export function useStaffAllocations() {
 
     resetAssignStaff:
       assignClassMutation.reset,
+
+    assignFacilitator:
+      assignFacilitatorMutation.mutateAsync,
+
+    assigningFacilitator:
+      assignFacilitatorMutation.isPending,
+
+    assignFacilitatorError:
+      assignFacilitatorMutation.error,
+
+    resetAssignFacilitator:
+      assignFacilitatorMutation.reset,
 
     closeAllocation:
       closeClassMutation.mutateAsync,

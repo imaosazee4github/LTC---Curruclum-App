@@ -32,25 +32,25 @@ const navigation = [
     label: "My Learning Experiences",
     path: "/facilitator/experiences",
     icon: BookOpen,
-    available: false,
+    available: true,
   },
   {
     label: "My Students",
     path: "/facilitator/students",
     icon: Users,
-    available: false,
+    available: true,
   },
   {
     label: "Record Engagement",
     path: "/facilitator/engagement",
     icon: ClipboardList,
-    available: false,
+    available: true,
   },
   {
     label: "Follow-Up Needed",
     path: "/facilitator/follow-ups",
     icon: ListChecks,
-    available: false,
+    available: true,
   },
 ];
 
