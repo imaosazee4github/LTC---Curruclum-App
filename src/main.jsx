@@ -13,6 +13,7 @@ import App from "./App";
 import {
   AuthProvider,
 } from "./context/AuthContext";
+import PwaUpdatePrompt from "./components/common/PwaUpdatePrompt";
 
 import "./index.css";
 
@@ -40,6 +41,7 @@ createRoot(
       >
         <AuthProvider>
           <App />
+          <PwaUpdatePrompt />
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
