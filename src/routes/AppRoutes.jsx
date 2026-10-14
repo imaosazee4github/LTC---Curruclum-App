@@ -38,6 +38,17 @@ import InstructorOversightPage from "../pages/super-admin/InstructorOversightPag
 import FacilitatorOversightPage from "../pages/super-admin/FacilitatorOversightPage";
 import CoachOversightPage from "../pages/super-admin/CoachOversightPage";
 import ServiceProjectsPage from "../pages/supervisor/ServiceProjectsPage";
+import FacilitatorExperiencesPage from "../pages/facilitator/FacilitatorExperiencesPage";
+import FacilitatorStudentsPage from "../pages/facilitator/FacilitatorStudentsPage";
+import FacilitatorEngagementPage from "../pages/facilitator/FacilitatorEngagementPage";
+import FacilitatorFollowUpsPage from "../pages/facilitator/FacilitatorFollowUpsPage";
+import LearningExperienceManagementPage from "../pages/super-admin/LearningExperienceManagementPage";
+import InstructorClassesPage from "../pages/instructor/InstructorClassesPage";
+import InstructorStudentsPage from "../pages/instructor/InstructorStudentsPage";
+import InstructorAttendancePage from "../pages/instructor/InstructorAttendancePage";
+import InstructorLearningPage from "../pages/instructor/InstructorLearningPage";
+import InstructorAssignmentsPage from "../pages/instructor/InstructorAssignmentsPage";
+import InstructorFollowUpsPage from "../pages/instructor/InstructorFollowUpsPage";
 
 export default function AppRoutes() {
   return (
@@ -85,12 +96,101 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/instructor/classes"
+        element={
+          <ProtectedRoute allowedRoles={["instructor"]}>
+            <InstructorClassesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/instructor/students"
+        element={
+          <ProtectedRoute allowedRoles={["instructor"]}>
+            <InstructorStudentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/instructor/attendance"
+        element={
+          <ProtectedRoute allowedRoles={["instructor"]}>
+            <InstructorAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/instructor/learning"
+        element={
+          <ProtectedRoute allowedRoles={["instructor"]}>
+            <InstructorLearningPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/instructor/assignments"
+        element={
+          <ProtectedRoute allowedRoles={["instructor"]}>
+            <InstructorAssignmentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/instructor/follow-ups"
+        element={
+          <ProtectedRoute allowedRoles={["instructor"]}>
+            <InstructorFollowUpsPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/facilitator/dashboard"
         element={
           <ProtectedRoute allowedRoles={["facilitator"]}>
             <FacilitatorDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/facilitator/experiences"
+        element={
+          <ProtectedRoute allowedRoles={["facilitator"]}>
+            <FacilitatorExperiencesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/facilitator/students"
+        element={
+          <ProtectedRoute allowedRoles={["facilitator"]}>
+            <FacilitatorStudentsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/facilitator/engagement"
+        element={
+          <ProtectedRoute allowedRoles={["facilitator"]}>
+            <FacilitatorEngagementPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/facilitator/follow-ups"
+        element={
+          <ProtectedRoute allowedRoles={["facilitator"]}>
+            <FacilitatorFollowUpsPage />
           </ProtectedRoute>
         }
       />
@@ -122,7 +222,6 @@ export default function AppRoutes() {
         }
       />
 
-
       <Route
         path="/supervisor/attendance"
         element={
@@ -140,7 +239,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
 
       <Route
         path="/mentor-department/dashboard"
@@ -195,14 +293,14 @@ export default function AppRoutes() {
         }
       />
 
-      {/* <Route
+      <Route
         path="/super-admin/learning-experiences"
         element={
           <ProtectedRoute allowedRoles={["super_admin"]}>
             <LearningExperienceManagementPage />
           </ProtectedRoute>
         }
-      /> */}
+      />
 
       <Route
         path="/super-admin/staff"

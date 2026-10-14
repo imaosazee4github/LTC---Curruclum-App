@@ -44,6 +44,12 @@ const navigation = [
     available: true,
   },
   {
+    label: "Learning Experiences",
+    path: "/super-admin/learning-experiences",
+    icon: BookOpen,
+    available: true,
+  },
+  {
     label: "Classes & Schedules",
     path: "/super-admin/classes",
     icon: CalendarDays,
