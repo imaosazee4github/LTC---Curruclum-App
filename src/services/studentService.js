@@ -248,3 +248,93 @@ export async function getMyApprovedMentorFeedback() {
         : [],
   };
 }
+
+// export async function getMyStudentDailySchedule(date) {
+//   if (!date) {
+//     throw new Error("Select a schedule date.");
+//   }
+
+//   const { data, error } = await supabase.rpc(
+//     "get_my_student_daily_schedule",
+//     {
+//       p_date: date,
+//     },
+//   );
+
+//   if (error) {
+//     throw new Error(error.message);
+//   }
+
+//   if (!data?.success) {
+//     throw new Error("Your daily schedule could not be loaded.");
+//   }
+
+//   return {
+//     date: data.date,
+//     timezone: data.timezone || "Africa/Lagos",
+//     activities: Array.isArray(data.activities)
+//       ? data.activities
+//       : [],
+//   };
+// }
+
+
+export async function getMyStudentDailySchedule(date) {
+  if (!date) {
+    throw new Error("Select a schedule date.");
+  }
+
+  const [learningResult, serviceResult] = await Promise.all([
+    supabase.rpc("get_my_student_daily_schedule", {
+      p_date: date,
+    }),
+    supabase.rpc("get_my_student_service_schedule", {
+      p_date: date,
+    }),
+  ]);
+
+  if (learningResult.error) {
+    throw new Error(learningResult.error.message);
+  }
+
+  if (serviceResult.error) {
+    throw new Error(serviceResult.error.message);
+  }
+
+  if (
+    !learningResult.data?.success ||
+    !serviceResult.data?.success
+  ) {
+    throw new Error("Your complete daily schedule could not be loaded.");
+  }
+
+  const learningActivities = Array.isArray(
+    learningResult.data.activities,
+  )
+    ? learningResult.data.activities
+    : [];
+
+  const serviceActivities = Array.isArray(
+    serviceResult.data.activities,
+  )
+    ? serviceResult.data.activities
+    : [];
+
+  const activities = [
+    ...learningActivities,
+    ...serviceActivities,
+  ].sort(
+    (a, b) =>
+      String(a.start_time || "").localeCompare(
+        String(b.start_time || ""),
+      ) ||
+      String(a.title || "").localeCompare(String(b.title || "")) ||
+      String(a.id).localeCompare(String(b.id)),
+  );
+
+  return {
+    date,
+    timezone: "Africa/Lagos",
+    activities,
+  };
+}

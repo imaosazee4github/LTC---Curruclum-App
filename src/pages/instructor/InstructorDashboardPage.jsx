@@ -158,7 +158,7 @@ export default function InstructorDashboardPage() {
                 <EmptyState
                   icon={BookOpen}
                   title="No course assignments"
-                  description="Courses assigned by the Super Administrator will appear here."
+                  description="Courses assigned by the LTC Administrator will appear here."
                 />
               )}
             </section>

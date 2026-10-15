@@ -155,7 +155,7 @@ export default function CoachDashboardPage() {
               <EmptyState
                 icon={UserRoundCheck}
                 title="No coaching assignments"
-                description="Students assigned by the Super Administrator will appear here."
+                description="Students assigned by the LTC Administrator will appear here."
               />
             )}
           </section>

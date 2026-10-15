@@ -108,11 +108,11 @@ export default function SuperAdminLayout({ children }) {
         replace: true,
       });
     } catch (error) {
-      console.error("Super Admin sign out failed:", error);
+      console.error("LTC Admin sign out failed:", error);
     }
   }
 
-  const displayName = profile?.full_name || "Super Administrator";
+  const displayName = profile?.full_name || "LTC Administrator";
 
   const initials = getInitials(displayName);
 
@@ -143,7 +143,7 @@ export default function SuperAdminLayout({ children }) {
             </div>
 
             <div>
-              <p className="font-bold">Super Admin Portal</p>
+              <p className="font-bold">Curriculum Admin Portal</p>
 
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
                 System Administration
@@ -170,7 +170,7 @@ export default function SuperAdminLayout({ children }) {
             <div className="min-w-0">
               <p className="truncate font-semibold">{displayName}</p>
 
-              <p className="text-sm text-slate-400">Super Administrator</p>
+              <p className="text-sm text-slate-400">Curriculum Administrator</p>
             </div>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function SuperAdminLayout({ children }) {
             <div>
               <p className="text-sm text-slate-500">LTC Pioneer Programme</p>
 
-              <p className="font-semibold text-blue-950">Super Admin Portal</p>
+              <p className="font-semibold text-blue-950">LTC Admin Portal</p>
             </div>
           </div>
 
@@ -238,7 +238,7 @@ export default function SuperAdminLayout({ children }) {
                 {displayName}
               </p>
 
-              <p className="text-xs text-slate-500">Super Administrator</p>
+              <p className="text-xs text-slate-500">LTC Administrator</p>
             </div>
 
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">

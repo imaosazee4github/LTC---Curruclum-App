@@ -154,7 +154,7 @@ export default function RecordCoachingPage() {
               </h2>
 
               <p className="mt-2 text-sm text-slate-500">
-                A Super Administrator
+                A LTC Administrator
                 must assign a student to
                 you before you can record
                 a coaching session.
