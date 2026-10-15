@@ -1,15 +1,9 @@
 import { useState } from "react";
 
-import {
-  Link,
-  NavLink,
-  useNavigate,
-} from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
-import {
-  useStudentProfile,
-} from "../hooks/useStudentProfile";
+import { useStudentProfile } from "../hooks/useStudentProfile";
 
 const primaryNavigation = [
   {
@@ -22,6 +16,12 @@ const primaryNavigation = [
     label: "My Profile",
     path: "/student/profile",
     icon: "○",
+    available: true,
+  },
+  {
+    label: "Daily Schedule",
+    path: "/student/schedule",
+    icon: "▦",
     available: true,
   },
   {
@@ -74,25 +74,16 @@ const primaryNavigation = [
   },
 ];
 
-export default function StudentLayout({
-  children,
-}) {
+export default function StudentLayout({ children }) {
   const navigate = useNavigate();
 
-  const {
-    profile,
-    signOut,
-  } = useAuth();
+  const { profile, signOut } = useAuth();
 
-  const {
-    studentProfile,
-  } = useStudentProfile();
+  const { studentProfile } = useStudentProfile();
 
-  const [menuOpen, setMenuOpen] =
-    useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const [signingOut, setSigningOut] =
-    useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -100,17 +91,11 @@ export default function StudentLayout({
     try {
       await signOut();
 
-      navigate(
-        "/login",
-        {
-          replace: true,
-        },
-      );
+      navigate("/login", {
+        replace: true,
+      });
     } catch (error) {
-      console.error(
-        "Unable to sign out:",
-        error,
-      );
+      console.error("Unable to sign out:", error);
 
       setSigningOut(false);
     }
@@ -141,16 +126,9 @@ export default function StudentLayout({
       )}
 
       <div className="lg:pl-72">
-        <StudentHeader
-          profile={profile}
-          onOpenMenu={() =>
-            setMenuOpen(true)
-          }
-        />
+        <StudentHeader profile={profile} onOpenMenu={() => setMenuOpen(true)} />
 
-        <div className="min-h-[calc(100vh-4.5rem)]">
-          {children}
-        </div>
+        <div className="min-h-[calc(100vh-4.5rem)]">{children}</div>
       </div>
     </div>
   );
@@ -167,9 +145,7 @@ function StudentSidebar({
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-blue-900 bg-blue-950 text-white transition-transform duration-200 lg:translate-x-0 ${
-        open
-          ? "translate-x-0"
-          : "-translate-x-full"
+        open ? "translate-x-0" : "-translate-x-full"
       }`}
     >
       <div className="flex h-[4.5rem] items-center justify-between border-b border-blue-900 px-5">
@@ -183,9 +159,7 @@ function StudentSidebar({
           </div>
 
           <div>
-            <p className="font-bold">
-              Pioneer Portal
-            </p>
+            <p className="font-bold">Pioneer Portal</p>
 
             <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300">
               Student Portal
@@ -205,21 +179,15 @@ function StudentSidebar({
 
       <div className="border-b border-blue-900 p-5">
         <div className="flex items-center gap-3">
-          <ProfilePhoto
-            profile={profile}
-            size="small"
-          />
+          <ProfilePhoto profile={profile} size="small" />
 
           <div className="min-w-0">
             <p className="truncate font-semibold">
-              {profile?.full_name ||
-                "Pioneer Student"}
+              {profile?.full_name || "Pioneer Student"}
             </p>
 
             <p className="mt-1 truncate text-xs text-blue-200">
-              {studentProfile
-                ?.student_number ||
-                "Student number pending"}
+              {studentProfile?.student_number || "Student number pending"}
             </p>
           </div>
         </div>
@@ -234,54 +202,49 @@ function StudentSidebar({
         </p>
 
         <div className="mt-3 space-y-1">
-          {primaryNavigation.map(
-            (item) =>
-              item.available ? (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  onClick={onClose}
-                  className={({
-                    isActive,
-                  }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition ${
-                      isActive
-                        ? "bg-white text-blue-950"
-                        : "text-blue-100 hover:bg-blue-900 hover:text-white"
-                    }`
-                  }
+          {primaryNavigation.map((item) =>
+            item.available ? (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition ${
+                    isActive
+                      ? "bg-white text-blue-950"
+                      : "text-blue-100 hover:bg-blue-900 hover:text-white"
+                  }`
+                }
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-7 w-7 items-center justify-center text-base"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="flex h-7 w-7 items-center justify-center text-base"
-                  >
-                    {item.icon}
-                  </span>
+                  {item.icon}
+                </span>
 
-                  <span>{item.label}</span>
-                </NavLink>
-              ) : (
-                <div
-                  key={item.path}
-                  className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-3 text-sm text-blue-300"
-                  title="This section will be available soon."
+                <span>{item.label}</span>
+              </NavLink>
+            ) : (
+              <div
+                key={item.path}
+                className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-3 text-sm text-blue-300"
+                title="This section will be available soon."
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-7 w-7 items-center justify-center text-base"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="flex h-7 w-7 items-center justify-center text-base"
-                  >
-                    {item.icon}
-                  </span>
+                  {item.icon}
+                </span>
 
-                  <span className="flex-1">
-                    {item.label}
-                  </span>
+                <span className="flex-1">{item.label}</span>
 
-                  <span className="rounded-full bg-blue-900 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-blue-200">
-                    Soon
-                  </span>
-                </div>
-              ),
+                <span className="rounded-full bg-blue-900 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-blue-200">
+                  Soon
+                </span>
+              </div>
+            ),
           )}
         </div>
       </nav>
@@ -293,19 +256,14 @@ function StudentSidebar({
           disabled={signingOut}
           className="w-full rounded-lg border border-blue-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {signingOut
-            ? "Signing out..."
-            : "Sign Out"}
+          {signingOut ? "Signing out..." : "Sign Out"}
         </button>
       </div>
     </aside>
   );
 }
 
-function StudentHeader({
-  profile,
-  onOpenMenu,
-}) {
+function StudentHeader({ profile, onOpenMenu }) {
   return (
     <header className="sticky top-0 z-20 flex h-[4.5rem] items-center justify-between border-b border-slate-200 bg-white px-5 lg:px-8">
       <div className="flex items-center gap-3">
@@ -319,13 +277,9 @@ function StudentHeader({
         </button>
 
         <div>
-          <p className="text-sm text-slate-500">
-            LTC Pioneer Programme
-          </p>
+          <p className="text-sm text-slate-500">LTC Pioneer Programme</p>
 
-          <p className="font-semibold text-blue-950">
-            Student Portal
-          </p>
+          <p className="font-semibold text-blue-950">Student Portal</p>
         </div>
       </div>
 
@@ -342,32 +296,20 @@ function StudentHeader({
 
         <div className="hidden text-right sm:block">
           <p className="max-w-48 truncate text-sm font-semibold text-slate-800">
-            {profile?.full_name ||
-              "Pioneer Student"}
+            {profile?.full_name || "Pioneer Student"}
           </p>
 
-          <p className="text-xs text-slate-500">
-            Student
-          </p>
+          <p className="text-xs text-slate-500">Student</p>
         </div>
 
-        <ProfilePhoto
-          profile={profile}
-          size="header"
-        />
+        <ProfilePhoto profile={profile} size="header" />
       </div>
     </header>
   );
 }
 
-function ProfilePhoto({
-  profile,
-  size,
-}) {
-  const sizeClass =
-    size === "small"
-      ? "h-11 w-11"
-      : "h-10 w-10";
+function ProfilePhoto({ profile, size }) {
+  const sizeClass = size === "small" ? "h-11 w-11" : "h-10 w-10";
 
   if (profile?.profile_photo_url) {
     return (
@@ -384,9 +326,7 @@ function ProfilePhoto({
       aria-label="Student profile initials"
       className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800`}
     >
-      {getInitials(
-        profile?.full_name,
-      )}
+      {getInitials(profile?.full_name)}
     </div>
   );
 }
@@ -436,8 +376,6 @@ function getInitials(fullName) {
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((name) =>
-      name.charAt(0).toUpperCase(),
-    )
+    .map((name) => name.charAt(0).toUpperCase())
     .join("");
 }

@@ -1208,9 +1208,91 @@ function normalizeLearningExperienceSummary(
   };
 }
 
+export async function getSuperAdminStudentOverview() {
+  const { data, error } = await supabase.rpc(
+    "get_super_admin_student_overview",
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error(
+      "The student overview could not be loaded.",
+    );
+  }
+
+  return {
+    students: Array.isArray(data.students)
+      ? data.students
+      : [],
+  };
+}
+
+export async function getSuperAdminStudentDetails(profileId) {
+  if (!profileId) {
+    throw new Error("A student profile ID is required.");
+  }
+
+  const { data: account, error: accountError } = await supabase
+    .from("profiles")
+    .select(`
+      id,
+      full_name,
+      email,
+      phone,
+      profile_photo_url
+    `)
+    .eq("id", profileId)
+    .eq("role", "student")
+    .maybeSingle();
+
+  if (accountError) {
+    throw new Error(accountError.message);
+  }
+
+  if (!account) {
+    return null;
+  }
+
+  const { data: studentProfile, error: studentError } = await supabase
+    .from("student_profiles")
+    .select(`
+      id,
+      profile_id,
+      student_number,
+      preferred_name,
+      date_of_birth,
+      gender,
+      residential_address,
+      city,
+      state,
+      country,
+      emergency_contact_name,
+      emergency_contact_relationship,
+      emergency_contact_phone,
+      entry_date,
+      expected_completion_date,
+      profile_completion_percentage
+    `)
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  if (studentError) {
+    throw new Error(studentError.message);
+  }
+
+  return {
+    account,
+    studentProfile,
+  };
+}
+
 function cleanOptionalText(value) {
   const cleaned =
     value?.trim();
 
   return cleaned || null;
 }
+

@@ -10,12 +10,14 @@ import {
   Users,
 } from "lucide-react";
 
+
 import {
   useSuperAdminDashboard,
 } from "../../hooks/useSuperAdminDashboard";
 
 import SuperAdminLayout from "../../layouts/SuperAdminLayout";
 
+import StudentOverviewTable from "./StudentOverviewTable";
 export default function SuperAdminDashboardPage() {
   const {
     superAdminDashboard,
@@ -44,7 +46,7 @@ export default function SuperAdminDashboardPage() {
           message={
             superAdminDashboardError
               ?.message ||
-            "The Super Admin dashboard could not be loaded."
+            "The LTC Admin dashboard could not be loaded."
           }
         />
       </SuperAdminLayout>
@@ -74,7 +76,7 @@ export default function SuperAdminDashboardPage() {
               </p>
 
               <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-                Super Admin Dashboard
+                LTC Admin Dashboard
               </h1>
 
               <p className="mt-2 max-w-3xl leading-7 text-slate-600">
@@ -267,6 +269,8 @@ export default function SuperAdminDashboardPage() {
               </div>
             </section>
           </div>
+
+          <StudentOverviewTable />
 
           <section className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <SectionHeader

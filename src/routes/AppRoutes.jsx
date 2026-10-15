@@ -49,6 +49,8 @@ import InstructorAttendancePage from "../pages/instructor/InstructorAttendancePa
 import InstructorLearningPage from "../pages/instructor/InstructorLearningPage";
 import InstructorAssignmentsPage from "../pages/instructor/InstructorAssignmentsPage";
 import InstructorFollowUpsPage from "../pages/instructor/InstructorFollowUpsPage";
+import SuperAdminStudentDetailsPage from "../pages/super-admin/SuperAdminStudentDetailsPage";
+import StudentDailySchedulePage from "../pages/student/StudentDailySchedulePage";
 
 export default function AppRoutes() {
   return (
@@ -60,12 +62,30 @@ export default function AppRoutes() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/student/register" element={<StudentRegistrationPage />} />
 
+      <Route
+        path="/super-admin/students/:profileId"
+        element={
+          <ProtectedRoute allowedRoles={["super_admin"]}>
+            <SuperAdminStudentDetailsPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route
         path="/auth/redirect"
         element={
           <ProtectedRoute>
             <AuthRedirectPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/schedule"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentDailySchedulePage />
           </ProtectedRoute>
         }
       />
