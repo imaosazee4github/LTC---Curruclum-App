@@ -13,33 +13,23 @@ import {
 } from "../services/coachService";
 
 export function useCoachDashboard() {
-  const queryClient =
-    useQueryClient();
-
-  const {
-    profile,
-    role,
-  } = useAuth();
+  const queryClient = useQueryClient();
+  const { profile, role } = useAuth();
 
   const enabled =
-    Boolean(profile?.id) &&
-    role === "coach";
+    Boolean(profile?.id) && role === "coach";
 
-  const dashboardQuery =
-    useQuery({
-      queryKey: [
-        "coach-dashboard",
-        profile?.id,
-      ],
+  const dashboardQuery = useQuery({
+    queryKey: [
+      "coach-dashboard",
+      profile?.id,
+    ],
 
-      queryFn:
-        getMyCoachDashboard,
+    queryFn: getMyCoachDashboard,
 
-      enabled,
-
-      staleTime:
-        30 * 1000,
-    });
+    enabled,
+    staleTime: 30 * 1000,
+  });
 
   async function refreshCoachingData() {
     await Promise.all([
@@ -50,12 +40,21 @@ export function useCoachDashboard() {
         ],
       }),
 
+      // Refresh every assignment filter for this coach.
+      queryClient.invalidateQueries({
+        queryKey: [
+          "coach-records",
+          profile?.id,
+        ],
+      }),
+
       queryClient.invalidateQueries({
         queryKey: [
           "coaching-assignment-options",
         ],
       }),
 
+      // Preserve refreshes for any existing consumers.
       queryClient.invalidateQueries({
         queryKey: [
           "student-coaching-record",
@@ -64,37 +63,31 @@ export function useCoachDashboard() {
     ]);
   }
 
-  const recordSessionMutation =
-    useMutation({
-      mutationFn:
-        recordCoachingSession,
+  const recordSessionMutation = useMutation({
+    mutationFn: recordCoachingSession,
 
-      onSuccess:
-        refreshCoachingData,
+    onSuccess: refreshCoachingData,
 
-      onError: (error) => {
-        console.error(
-          "Recording coaching session failed:",
-          error,
-        );
-      },
-    });
+    onError: (error) => {
+      console.error(
+        "Recording coaching session failed:",
+        error,
+      );
+    },
+  });
 
-  const updateFollowUpMutation =
-    useMutation({
-      mutationFn:
-        updateCoachingFollowUp,
+  const updateFollowUpMutation = useMutation({
+    mutationFn: updateCoachingFollowUp,
 
-      onSuccess:
-        refreshCoachingData,
+    onSuccess: refreshCoachingData,
 
-      onError: (error) => {
-        console.error(
-          "Updating coaching follow-up failed:",
-          error,
-        );
-      },
-    });
+    onError: (error) => {
+      console.error(
+        "Updating coaching follow-up failed:",
+        error,
+      );
+    },
+  });
 
   return {
     coachDashboard:
@@ -113,12 +106,10 @@ export function useCoachDashboard() {
       dashboardQuery.refetch,
 
     recordSession:
-      recordSessionMutation
-        .mutateAsync,
+      recordSessionMutation.mutateAsync,
 
     recordingSession:
-      recordSessionMutation
-        .isPending,
+      recordSessionMutation.isPending,
 
     recordSessionError:
       recordSessionMutation.error,
@@ -130,12 +121,10 @@ export function useCoachDashboard() {
       recordSessionMutation.reset,
 
     updateFollowUp:
-      updateFollowUpMutation
-        .mutateAsync,
+      updateFollowUpMutation.mutateAsync,
 
     updatingFollowUp:
-      updateFollowUpMutation
-        .isPending,
+      updateFollowUpMutation.isPending,
 
     updateFollowUpError:
       updateFollowUpMutation.error,

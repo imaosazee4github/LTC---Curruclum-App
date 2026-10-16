@@ -338,3 +338,50 @@ export async function getMyStudentDailySchedule(date) {
     activities,
   };
 }
+
+
+export async function getMyStudentCoaching() {
+  const { data, error } = await supabase.rpc(
+    "get_my_student_coaching",
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error("Your coaching records could not be loaded.");
+  }
+
+  return {
+    assignments: Array.isArray(data.assignments)
+      ? data.assignments
+      : [],
+
+    sessions: Array.isArray(data.sessions)
+      ? data.sessions
+      : [],
+
+    followUps: Array.isArray(data.followUps)
+      ? data.followUps
+      : [],
+  };
+}
+
+export async function getMyStudentLearning() {
+  const { data, error } = await supabase.rpc(
+    "get_my_student_learning",
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error("Your courses could not be loaded.");
+  }
+
+  return {
+    classes: Array.isArray(data.classes) ? data.classes : [],
+  };
+}

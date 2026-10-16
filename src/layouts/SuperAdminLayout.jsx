@@ -1,5 +1,4 @@
 import {
-  Bell,
   BookOpen,
   CalendarDays,
   ClipboardList,
@@ -11,6 +10,8 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+
+import AdminNotifications from "../components/layout/AdminNotifications";
 
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -32,7 +33,7 @@ const navigation = [
     available: true,
   },
   {
-    label: "Staff Allocations",
+    label: "Supervisor Appointments",
     path: "/super-admin/staff-allocations",
     icon: UserRoundCog,
     available: true,
@@ -43,22 +44,11 @@ const navigation = [
     icon: BookOpen,
     available: true,
   },
-  {
-    label: "Learning Experiences",
-    path: "/super-admin/learning-experiences",
-    icon: BookOpen,
-    available: true,
-  },
+
   {
     label: "Classes & Schedules",
     path: "/super-admin/classes",
     icon: CalendarDays,
-    available: true,
-  },
-  {
-    label: "Coaching Assignments",
-    path: "/super-admin/coaching-assignments",
-    icon: UserRoundCog,
     available: true,
   },
   {
@@ -223,15 +213,7 @@ export default function SuperAdminLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="relative rounded-lg border border-slate-200 p-2 text-slate-600"
-            >
-              <Bell size={20} />
-
-              <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
-            </button>
+            <AdminNotifications />
 
             <div className="hidden text-right sm:block">
               <p className="max-w-48 truncate text-sm font-semibold text-slate-900">

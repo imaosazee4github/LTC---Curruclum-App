@@ -10,9 +10,8 @@ import {
 } from "@tanstack/react-query";
 
 import App from "./App";
-import {
-  AuthProvider,
-} from "./context/AuthContext";
+// import { AuthProvider } from "./context/AuthContext.jsx";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 import "./index.css";
 

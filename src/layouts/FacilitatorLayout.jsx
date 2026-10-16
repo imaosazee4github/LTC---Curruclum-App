@@ -29,7 +29,7 @@ const navigation = [
     available: true,
   },
   {
-    label: "My Learning Experiences",
+    label: "My Courses",
     path: "/facilitator/experiences",
     icon: BookOpen,
     available: true,
@@ -124,7 +124,7 @@ export default function FacilitatorLayout({
             }
             className="flex items-center gap-3"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white font-bold text-blue-950">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white  font-bold text-blue-950">
               LTC
             </div>
 
@@ -134,7 +134,7 @@ export default function FacilitatorLayout({
               </p>
 
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                Learning Experiences
+                Course Facilitation
               </p>
             </div>
           </NavLink>

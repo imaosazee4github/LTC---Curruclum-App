@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 
-export default function PublicFooter() {
-  const currentYear =
-    new Date().getFullYear();
+const currentYear = new Date().getFullYear();
 
+export default function PublicFooter() {
   return (
+
     <footer
       id="support"
       className="border-t border-slate-200 bg-blue-950 text-white"

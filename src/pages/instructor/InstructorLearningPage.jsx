@@ -55,8 +55,7 @@ export default function InstructorLearningPage() {
     instructorDashboard?.courses || [];
 
   const sessions =
-    instructorDashboard?.upcomingSessions ||
-    [];
+    instructorDashboard?.sessions || [];
 
   const classes = courses.flatMap(
     (course) =>
