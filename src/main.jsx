@@ -1,8 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  BrowserRouter,
-} from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 
 import {
   QueryClient,
@@ -10,8 +8,8 @@ import {
 } from "@tanstack/react-query";
 
 import App from "./App";
-// import { AuthProvider } from "./context/AuthContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import PwaUpdatePrompt from "./components/common/PwaUpdatePrompt";
 
 import "./index.css";
 
@@ -22,23 +20,19 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
     },
-
     mutations: {
       retry: 0,
     },
   },
 });
 
-createRoot(
-  document.getElementById("root"),
-).render(
+createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
-      <QueryClientProvider
-        client={queryClient}
-      >
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />
+          <PwaUpdatePrompt />
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>

@@ -29,3 +29,6 @@ dist
 .env
 .env.local
 .env.*.local
+
+# Generated PWA development files
+dev-dist/
