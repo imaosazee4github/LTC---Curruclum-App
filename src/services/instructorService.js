@@ -1,110 +1,113 @@
 import { supabase } from "../lib/supabase";
 
+// export async function getMyInstructorDashboard() {
+//   const { data, error } = await supabase.rpc("get_my_instructor_dashboard");
+
+//   if (error) {
+//     throw new Error(error.message);
+//   }
+
+//   return {
+//     success: Boolean(data?.success),
+
+//     instructor: data?.instructor || null,
+
+//     summary: {
+//       assignedCourses: Number(data?.summary?.assignedCourses) || 0,
+
+//       activeClasses: Number(data?.summary?.activeClasses) || 0,
+
+//       assignedStudents: Number(data?.summary?.assignedStudents) || 0,
+
+//       sessionsToday: Number(data?.summary?.sessionsToday) || 0,
+
+//       // sessions: Array.isArray(data?.sessions) ? data.sessions : [],
+//       sessions: Array.isArray(data?.sessions) ? data.sessions : [],
+
+//       upcomingSessions: Number(data?.summary?.upcomingSessions) || 0,
+
+//       openFollowUps: Number(data?.summary?.openFollowUps) || 0,
+//     },
+
+//     courses: Array.isArray(data?.courses) ? data.courses : [],
+
+//     upcomingSessions: Array.isArray(data?.upcomingSessions)
+//       ? data.upcomingSessions
+//       : [],
+
+//     followUps: Array.isArray(data?.followUps) ? data.followUps : [],
+//   };
+// }
+
 export async function getMyInstructorDashboard() {
-  const { data, error } =
-    await supabase.rpc(
-      "get_my_instructor_dashboard",
-    );
+  const { data, error } = await supabase.rpc(
+    "get_my_instructor_dashboard",
+  );
 
   if (error) {
     throw new Error(error.message);
   }
 
   return {
-    success:
-      Boolean(data?.success),
+    success: Boolean(data?.success),
 
-    instructor:
-      data?.instructor || null,
+    instructor: data?.instructor || null,
 
     summary: {
       assignedCourses:
-        Number(
-          data?.summary
-            ?.assignedCourses,
-        ) || 0,
+        Number(data?.summary?.assignedCourses) || 0,
 
       activeClasses:
-        Number(
-          data?.summary
-            ?.activeClasses,
-        ) || 0,
+        Number(data?.summary?.activeClasses) || 0,
 
       assignedStudents:
-        Number(
-          data?.summary
-            ?.assignedStudents,
-        ) || 0,
+        Number(data?.summary?.assignedStudents) || 0,
 
       sessionsToday:
-        Number(
-          data?.summary
-            ?.sessionsToday,
-        ) || 0,
+        Number(data?.summary?.sessionsToday) || 0,
 
       upcomingSessions:
-        Number(
-          data?.summary
-            ?.upcomingSessions,
-        ) || 0,
+        Number(data?.summary?.upcomingSessions) || 0,
 
       openFollowUps:
-        Number(
-          data?.summary
-            ?.openFollowUps,
-        ) || 0,
+        Number(data?.summary?.openFollowUps) || 0,
     },
 
-    courses:
-      Array.isArray(data?.courses)
-        ? data.courses
-        : [],
+    courses: Array.isArray(data?.courses)
+      ? data.courses
+      : [],
 
-    upcomingSessions:
-      Array.isArray(
-        data?.upcomingSessions,
-      )
-        ? data.upcomingSessions
-        : [],
+    sessions: Array.isArray(data?.sessions)
+      ? data.sessions
+      : [],
 
-    followUps:
-      Array.isArray(data?.followUps)
-        ? data.followUps
-        : [],
+    upcomingSessions: Array.isArray(data?.upcomingSessions)
+      ? data.upcomingSessions
+      : [],
+
+    followUps: Array.isArray(data?.followUps)
+      ? data.followUps
+      : [],
   };
 }
 
-export async function getMyInstructorStudents({
-  classId = null,
-} = {}) {
-  const { data, error } =
-    await supabase.rpc(
-      "get_my_instructor_students",
-      {
-        p_class_id:
-          classId || null,
-      },
-    );
+export async function getMyInstructorStudents({ classId = null } = {}) {
+  const { data, error } = await supabase.rpc("get_my_instructor_students", {
+    p_class_id: classId || null,
+  });
 
   if (error) {
     throw new Error(error.message);
   }
 
   return {
-    success:
-      Boolean(data?.success),
+    success: Boolean(data?.success),
 
-    classId:
-      data?.class_id || null,
+    classId: data?.class_id || null,
 
-    totalStudents:
-      Number(data?.totalStudents) ||
-      0,
+    totalStudents: Number(data?.totalStudents) || 0,
 
-    students:
-      Array.isArray(data?.students)
-        ? data.students
-        : [],
+    students: Array.isArray(data?.students) ? data.students : [],
   };
 }
 
@@ -118,49 +121,32 @@ export async function recordStudentAttendance({
   followUpRequired = false,
 }) {
   if (!sessionId) {
-    throw new Error(
-      "Select a class session.",
-    );
+    throw new Error("Select a class session.");
   }
 
   if (!studentProfileId) {
-    throw new Error(
-      "Select a student.",
-    );
+    throw new Error("Select a student.");
   }
 
   if (!attendanceStatus) {
-    throw new Error(
-      "Select an attendance status.",
-    );
+    throw new Error("Select an attendance status.");
   }
 
-  const { data, error } =
-    await supabase.rpc(
-      "record_student_attendance",
-      {
-        p_session_id:
-          sessionId,
+  const { data, error } = await supabase.rpc("record_student_attendance", {
+    p_session_id: sessionId,
 
-        p_student_profile_id:
-          studentProfileId,
+    p_student_profile_id: studentProfileId,
 
-        p_attendance_status:
-          attendanceStatus,
+    p_attendance_status: attendanceStatus,
 
-        p_arrival_time:
-          arrivalTime || null,
+    p_arrival_time: arrivalTime || null,
 
-        p_departure_time:
-          departureTime || null,
+    p_departure_time: departureTime || null,
 
-        p_notes:
-          cleanOptionalText(notes),
+    p_notes: cleanOptionalText(notes),
 
-        p_follow_up_required:
-          Boolean(followUpRequired),
-      },
-    );
+    p_follow_up_required: Boolean(followUpRequired),
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -188,35 +174,25 @@ export async function recordStudentLearning({
   followUpStatus,
 }) {
   if (!classId) {
-    throw new Error(
-      "Select a class.",
-    );
+    throw new Error("Select a class.");
   }
 
   if (!studentProfileId) {
-    throw new Error(
-      "Select a student.",
-    );
+    throw new Error("Select a student.");
   }
 
   if (!recordType) {
-    throw new Error(
-      "Select a learning record type.",
-    );
+    throw new Error("Select a learning record type.");
   }
 
   if (!learningStatus) {
-    throw new Error(
-      "Select a learning status.",
-    );
+    throw new Error("Select a learning status.");
   }
 
   const hasRecordContent =
     Boolean(activityTitle?.trim()) ||
     Boolean(observation?.trim()) ||
-    Boolean(
-      evidenceDescription?.trim(),
-    ) ||
+    Boolean(evidenceDescription?.trim()) ||
     Boolean(feedback?.trim()) ||
     Boolean(concern?.trim());
 
@@ -226,89 +202,43 @@ export async function recordStudentLearning({
     );
   }
 
-  if (
-    followUpRequired &&
-    !followUpAction?.trim()
-  ) {
-    throw new Error(
-      "Enter the required follow-up action.",
-    );
+  if (followUpRequired && !followUpAction?.trim()) {
+    throw new Error("Enter the required follow-up action.");
   }
 
-  const { data, error } =
-    await supabase.rpc(
-      "record_student_learning",
-      {
-        p_class_id:
-          classId,
+  const { data, error } = await supabase.rpc("record_student_learning", {
+    p_class_id: classId,
 
-        p_student_profile_id:
-          studentProfileId,
+    p_student_profile_id: studentProfileId,
 
-        p_record_type:
-          recordType,
+    p_record_type: recordType,
 
-        p_learning_status:
-          learningStatus,
+    p_learning_status: learningStatus,
 
-        p_session_id:
-          sessionId || null,
+    p_session_id: sessionId || null,
 
-        p_activity_title:
-          cleanOptionalText(
-            activityTitle,
-          ),
+    p_activity_title: cleanOptionalText(activityTitle),
 
-        p_observation:
-          cleanOptionalText(
-            observation,
-          ),
+    p_observation: cleanOptionalText(observation),
 
-        p_evidence_description:
-          cleanOptionalText(
-            evidenceDescription,
-          ),
+    p_evidence_description: cleanOptionalText(evidenceDescription),
 
-        p_evidence_url:
-          cleanOptionalText(
-            evidenceUrl,
-          ),
+    p_evidence_url: cleanOptionalText(evidenceUrl),
 
-        p_strengths:
-          cleanOptionalText(
-            strengths,
-          ),
+    p_strengths: cleanOptionalText(strengths),
 
-        p_development_area:
-          cleanOptionalText(
-            developmentArea,
-          ),
+    p_development_area: cleanOptionalText(developmentArea),
 
-        p_feedback:
-          cleanOptionalText(
-            feedback,
-          ),
+    p_feedback: cleanOptionalText(feedback),
 
-        p_concern:
-          cleanOptionalText(
-            concern,
-          ),
+    p_concern: cleanOptionalText(concern),
 
-        p_follow_up_required:
-          Boolean(followUpRequired),
+    p_follow_up_required: Boolean(followUpRequired),
 
-        p_follow_up_action:
-          cleanOptionalText(
-            followUpAction,
-          ),
+    p_follow_up_action: cleanOptionalText(followUpAction),
 
-        p_follow_up_status:
-          followUpRequired
-            ? followUpStatus ||
-              "open"
-            : null,
-      },
-    );
+    p_follow_up_status: followUpRequired ? followUpStatus || "open" : null,
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -318,8 +248,7 @@ export async function recordStudentLearning({
 }
 
 function cleanOptionalText(value) {
-  const cleaned =
-    value?.trim();
+  const cleaned = value?.trim();
 
   return cleaned || null;
 }

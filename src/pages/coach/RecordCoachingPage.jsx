@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useCoachDashboard } from "../../hooks/useCoachDashboard";
 import CoachLayout from "../../layouts/CoachLayout";
@@ -28,72 +29,139 @@ const initialForm = {
   followUpDueDate: "",
 };
 
+const coachingFields = [
+  {
+    label: "Performance",
+    name: "performance",
+    placeholder: "Describe the student's performance.",
+  },
+  {
+    label: "Practice",
+    name: "practice",
+    placeholder: "Describe the practice completed.",
+  },
+  {
+    label: "Feedback",
+    name: "feedback",
+    placeholder: "Enter coaching feedback.",
+    required: true,
+  },
+  {
+    label: "Progress",
+    name: "progress",
+    placeholder: "Describe the progress made.",
+  },
+  {
+    label: "Improvement",
+    name: "improvement",
+    placeholder: "Describe areas of improvement.",
+  },
+  {
+    label: "Challenges",
+    name: "challenges",
+    placeholder: "Describe any challenges.",
+  },
+  {
+    label: "Support",
+    name: "support",
+    placeholder: "Describe the support required or provided.",
+  },
+  {
+    label: "Next Goal",
+    name: "nextGoal",
+    placeholder: "Enter the student's next goal.",
+  },
+];
+
 export default function RecordCoachingPage() {
   const {
     coachDashboard,
     coachDashboardLoading,
     coachDashboardError,
+    refreshCoachDashboard,
     recordSession,
     recordingSession,
     recordSessionError,
     resetRecordSession,
   } = useCoachDashboard();
 
-  const [form, setForm] =
-    useState(initialForm);
+  const [form, setForm] = useState(initialForm);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [validationError, setValidationError] = useState("");
 
-  const [
-    successMessage,
-    setSuccessMessage,
-  ] = useState("");
+  const assignments = Array.isArray(coachDashboard?.assignments)
+    ? coachDashboard.assignments.filter(
+        (assignment) => assignment.status === "active",
+      )
+    : [];
 
-  const assignments =
-    Array.isArray(
-      coachDashboard?.assignments,
-    )
-      ? coachDashboard.assignments.filter(
-          (assignment) =>
-            assignment.status ===
-            "active",
-        )
-      : [];
+  const selectedAssignment = assignments.find(
+    (assignment) =>
+      getAssignmentId(assignment) === form.assignmentId,
+  );
 
   function handleChange(event) {
-    const {
-      name,
-      value,
-      type,
-      checked,
-    } = event.target;
+    const { name, value, type, checked } = event.target;
 
     setForm((current) => ({
       ...current,
-
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
 
     setSuccessMessage("");
+    setValidationError("");
     resetRecordSession();
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
+    if (recordingSession) return;
+
     setSuccessMessage("");
+    setValidationError("");
+
+    if (!selectedAssignment) {
+      setValidationError("Select an active student and course.");
+      return;
+    }
+
+    if (!form.sessionSummary.trim() || !form.feedback.trim()) {
+      setValidationError("Enter a session summary and coaching feedback.");
+      return;
+    }
+
+    if (
+      form.followUpRequired &&
+      (!form.followUpImprovementArea.trim() ||
+        !form.followUpAction.trim())
+    ) {
+      setValidationError(
+        "Enter the improvement area and action required for the follow-up.",
+      );
+      return;
+    }
 
     try {
-      const result =
-        await recordSession(form);
+      const result = await recordSession({
+        ...form,
+        followUpImprovementArea: form.followUpRequired
+          ? form.followUpImprovementArea
+          : "",
+        followUpAction: form.followUpRequired
+          ? form.followUpAction
+          : "",
+        followUpDueDate: form.followUpRequired
+          ? form.followUpDueDate
+          : "",
+      });
 
       setSuccessMessage(
         result?.message ||
           "The coaching session was recorded successfully.",
       );
 
-      setForm(initialForm);
+      setForm({ ...initialForm });
     } catch {
       // The mutation error is displayed below.
     }
@@ -102,7 +170,33 @@ export default function RecordCoachingPage() {
   if (coachDashboardLoading) {
     return (
       <CoachLayout>
-        <PageState message="Loading coaching assignments..." />
+        <PageState message="Loading your students and courses..." />
+      </CoachLayout>
+    );
+  }
+
+  if (coachDashboardError) {
+    return (
+      <CoachLayout>
+        <main className="px-5 py-8 md:px-8">
+          <section className="mx-auto max-w-5xl">
+            <Alert
+              type="error"
+              message={
+                coachDashboardError.message ||
+                "Your students and courses could not be loaded."
+              }
+            />
+
+            <button
+              type="button"
+              onClick={() => refreshCoachDashboard()}
+              className="mt-4 rounded-lg bg-blue-950 px-5 py-3 font-semibold text-white"
+            >
+              Try Again
+            </button>
+          </section>
+        </main>
       </CoachLayout>
     );
   }
@@ -111,355 +205,239 @@ export default function RecordCoachingPage() {
     <CoachLayout>
       <main className="px-5 py-8 md:px-8">
         <section className="mx-auto max-w-5xl">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-amber-700">
-              Capability Development
-            </p>
+          <header className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wider text-amber-700">
+                Coach Portal
+              </p>
 
-            <h1 className="mt-1 text-3xl font-bold text-blue-950">
-              Record Coaching
-            </h1>
+              <h1 className="mt-1 text-3xl font-bold text-blue-950">
+                Record Coaching
+              </h1>
 
-            <p className="mt-2 max-w-3xl text-slate-600">
-              Record a coaching session,
-              student performance,
-              practice, progress,
-              feedback, next goals and
-              required follow-up.
-            </p>
-          </div>
+              <p className="mt-2 max-w-3xl leading-7 text-slate-600">
+                Select a student and course, then record the session,
+                feedback, progress and any required follow-up.
+                Fields marked * are required.
+              </p>
+            </div>
 
-          {coachDashboardError ? (
-            <Alert
-              type="error"
-              message={
-                coachDashboardError.message
-              }
-            />
-          ) : null}
+            <Link
+              to="/coach/records"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              View Coaching Records
+            </Link>
+          </header>
 
-          {successMessage ? (
-            <Alert
-              type="success"
-              message={successMessage}
-            />
-          ) : null}
+          {successMessage && (
+            <Alert type="success" message={successMessage} />
+          )}
 
           {assignments.length === 0 ? (
             <section className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-              <ClipboardPlus className="mx-auto h-10 w-10 text-slate-400" />
+              <ClipboardPlus
+                aria-hidden="true"
+                className="mx-auto h-10 w-10 text-slate-400"
+              />
 
               <h2 className="mt-4 text-lg font-bold text-slate-900">
-                No active coaching assignment
+                No active students and courses
               </h2>
 
-              <p className="mt-2 text-sm text-slate-500">
-                A LTC Administrator
-                must assign a student to
-                you before you can record
-                a coaching session.
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-slate-500">
+                Students appear automatically when an administrator assigns
+                you as a coach to their course in Staff Management.
+                Session recording requires an active coaching assignment.
               </p>
             </section>
           ) : (
             <form
               onSubmit={handleSubmit}
+              aria-busy={recordingSession}
               className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8"
             >
-              <div className="grid gap-5 md:grid-cols-2">
-                <FormField
-                  label="Student Assignment"
-                  required
-                >
-                  <select
-                    name="assignmentId"
-                    value={
-                      form.assignmentId
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    required
-                    className={inputClass}
-                  >
-                    <option value="">
-                      Select an assigned
-                      student
-                    </option>
+              <fieldset
+                disabled={recordingSession}
+                className="min-w-0"
+              >
+                <legend className="sr-only">
+                  Coaching session details
+                </legend>
 
-                    {assignments.map(
-                      (assignment) => (
-                        <option
-                          key={
-                            assignment.assignment_id ||
-                            assignment.id
-                          }
-                          value={
-                            assignment.assignment_id ||
-                            assignment.id
-                          }
-                        >
-                          {getAssignmentLabel(
-                            assignment,
-                          )}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </FormField>
-
-                <FormField label="Session Date">
-                  <input
-                    type="date"
-                    name="sessionDate"
-                    value={
-                      form.sessionDate
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    className={inputClass}
-                  />
-                </FormField>
-              </div>
-
-              <div className="mt-5">
-                <FormField
-                  label="Session Summary"
-                  required
-                >
-                  <textarea
-                    name="sessionSummary"
-                    value={
-                      form.sessionSummary
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    required
-                    rows={4}
-                    placeholder="Summarize what was discussed and practised during the coaching session."
-                    className={inputClass}
-                  />
-                </FormField>
-              </div>
-
-              <div className="mt-5 grid gap-5 md:grid-cols-2">
-                <TextArea
-                  label="Performance"
-                  name="performance"
-                  value={
-                    form.performance
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Describe the student's performance."
-                />
-
-                <TextArea
-                  label="Practice"
-                  name="practice"
-                  value={form.practice}
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Describe the practice completed."
-                />
-
-                <TextArea
-                  label="Feedback"
-                  name="feedback"
-                  value={form.feedback}
-                  onChange={
-                    handleChange
-                  }
-                  required
-                  placeholder="Enter coaching feedback."
-                />
-
-                <TextArea
-                  label="Progress"
-                  name="progress"
-                  value={form.progress}
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Describe the progress made."
-                />
-
-                <TextArea
-                  label="Improvement"
-                  name="improvement"
-                  value={
-                    form.improvement
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Describe areas of improvement."
-                />
-
-                <TextArea
-                  label="Challenges"
-                  name="challenges"
-                  value={
-                    form.challenges
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Describe any challenges."
-                />
-
-                <TextArea
-                  label="Support"
-                  name="support"
-                  value={form.support}
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Describe the support required or provided."
-                />
-
-                <TextArea
-                  label="Next Goal"
-                  name="nextGoal"
-                  value={form.nextGoal}
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Enter the student's next goal."
-                />
-
-                <div className="md:col-span-2">
-                  <TextArea
-                    label="Practice Adjustment"
-                    name="practiceAdjustment"
-                    value={
-                      form.practiceAdjustment
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    placeholder="Describe any change required in the practice plan."
-                  />
-                </div>
-              </div>
-
-              <section className="mt-7 rounded-xl border border-amber-200 bg-amber-50 p-5">
-                <label className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    name="followUpRequired"
-                    checked={
-                      form.followUpRequired
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-950"
-                  />
-
-                  <span>
-                    <span className="block font-bold text-slate-900">
-                      Follow-up required
-                    </span>
-
-                    <span className="mt-1 block text-sm text-slate-600">
-                      Create a follow-up
-                      action for this
-                      student.
-                    </span>
-                  </span>
-                </label>
-
-                {form.followUpRequired ? (
-                  <div className="mt-5 grid gap-5 md:grid-cols-2">
-                    <FormField
-                      label="Improvement Area"
+                <div className="grid gap-5 md:grid-cols-2">
+                  <FormField label="Student and Course" required>
+                    <select
+                      name="assignmentId"
+                      value={form.assignmentId}
+                      onChange={handleChange}
                       required
+                      className={inputClass}
                     >
-                      <textarea
+                      <option value="">
+                        Select a student and course
+                      </option>
+
+                      {assignments.map((assignment) => (
+                        <option
+                          key={getAssignmentId(assignment)}
+                          value={getAssignmentId(assignment)}
+                        >
+                          {getAssignmentLabel(assignment)}
+                        </option>
+                      ))}
+                    </select>
+                  </FormField>
+
+                  <FormField label="Session Date">
+                    <input
+                      type="date"
+                      name="sessionDate"
+                      value={form.sessionDate}
+                      onChange={handleChange}
+                      className={inputClass}
+                    />
+                  </FormField>
+                </div>
+
+                {selectedAssignment && (
+                  <section
+                    aria-label="Selected coaching assignment"
+                    className="mt-5 rounded-xl border border-blue-100 bg-blue-50 p-4"
+                  >
+                    <p className="font-semibold text-blue-950">
+                      {getAssignmentLabel(selectedAssignment)}
+                    </p>
+
+                    {selectedAssignment.goal && (
+                      <p className="mt-2 text-sm leading-6 text-slate-700">
+                        <span className="font-semibold">Coaching goal: </span>
+                        {selectedAssignment.goal}
+                      </p>
+                    )}
+                  </section>
+                )}
+
+                <div className="mt-5">
+                  <FormField label="Session Summary" required>
+                    <textarea
+                      name="sessionSummary"
+                      value={form.sessionSummary}
+                      onChange={handleChange}
+                      required
+                      rows={4}
+                      placeholder="Summarize what was discussed and practised during the coaching session."
+                      className={inputClass}
+                    />
+                  </FormField>
+                </div>
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  {coachingFields.map((field) => (
+                    <TextArea
+                      key={field.name}
+                      {...field}
+                      value={form[field.name]}
+                      onChange={handleChange}
+                    />
+                  ))}
+
+                  <div className="md:col-span-2">
+                    <TextArea
+                      label="Practice Adjustment"
+                      name="practiceAdjustment"
+                      value={form.practiceAdjustment}
+                      onChange={handleChange}
+                      placeholder="Describe any change required in the practice plan."
+                    />
+                  </div>
+                </div>
+
+                <section className="mt-7 rounded-xl border border-amber-200 bg-amber-50 p-5">
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      name="followUpRequired"
+                      checked={form.followUpRequired}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-950"
+                    />
+
+                    <span>
+                      <span className="block font-bold text-slate-900">
+                        Follow-up required
+                      </span>
+
+                      <span className="mt-1 block text-sm text-slate-600">
+                        Create a follow-up action for this student.
+                      </span>
+                    </span>
+                  </label>
+
+                  {form.followUpRequired && (
+                    <div className="mt-5 grid gap-5 md:grid-cols-2">
+                      <TextArea
+                        label="Improvement Area"
                         name="followUpImprovementArea"
-                        value={
-                          form.followUpImprovementArea
-                        }
-                        onChange={
-                          handleChange
-                        }
+                        value={form.followUpImprovementArea}
+                        onChange={handleChange}
                         required
-                        rows={3}
-                        className={
-                          inputClass
-                        }
                         placeholder="State the area requiring improvement."
                       />
-                    </FormField>
 
-                    <FormField
-                      label="Follow-Up Action"
-                      required
-                    >
-                      <textarea
+                      <TextArea
+                        label="Follow-Up Action"
                         name="followUpAction"
-                        value={
-                          form.followUpAction
-                        }
-                        onChange={
-                          handleChange
-                        }
+                        value={form.followUpAction}
+                        onChange={handleChange}
                         required
-                        rows={3}
-                        className={
-                          inputClass
-                        }
                         placeholder="Describe the action to be taken."
                       />
-                    </FormField>
 
-                    <FormField label="Due Date">
-                      <input
-                        type="date"
-                        name="followUpDueDate"
-                        value={
-                          form.followUpDueDate
-                        }
-                        onChange={
-                          handleChange
-                        }
-                        className={
-                          inputClass
-                        }
-                      />
-                    </FormField>
-                  </div>
-                ) : null}
-              </section>
+                      <FormField label="Due Date">
+                        <input
+                          type="date"
+                          name="followUpDueDate"
+                          value={form.followUpDueDate}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                      </FormField>
+                    </div>
+                  )}
+                </section>
 
-              {recordSessionError ? (
-                <Alert
-                  type="error"
-                  message={
-                    recordSessionError.message
-                  }
-                />
-              ) : null}
+                {(validationError || recordSessionError) && (
+                  <Alert
+                    type="error"
+                    message={
+                      validationError ||
+                      recordSessionError?.message ||
+                      "The coaching session could not be recorded."
+                    }
+                  />
+                )}
 
-              <button
-                type="submit"
-                disabled={
-                  recordingSession
-                }
-                className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-950 px-5 py-3 font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <CheckCircle2
-                  size={19}
-                />
+                <button
+                  type="submit"
+                  disabled={recordingSession}
+                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-950 px-5 py-3 font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {recordingSession ? (
+                    <RefreshCw
+                      aria-hidden="true"
+                      size={19}
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <CheckCircle2 aria-hidden="true" size={19} />
+                  )}
 
-                {recordingSession
-                  ? "Recording Session..."
-                  : "Record Coaching Session"}
-              </button>
+                  {recordingSession
+                    ? "Recording Session..."
+                    : "Record Coaching Session"}
+                </button>
+              </fieldset>
             </form>
           )}
         </section>
@@ -477,10 +455,7 @@ function TextArea({
   required = false,
 }) {
   return (
-    <FormField
-      label={label}
-      required={required}
-    >
+    <FormField label={label} required={required}>
       <textarea
         name={name}
         value={value}
@@ -494,22 +469,16 @@ function TextArea({
   );
 }
 
-function FormField({
-  label,
-  required,
-  children,
-}) {
+function FormField({ label, required = false, children }) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-semibold text-slate-700">
         {label}
-
-        {required ? (
-          <span className="text-red-600">
-            {" "}
-            *
+        {required && (
+          <span aria-hidden="true" className="text-red-600">
+            {" "}*
           </span>
-        ) : null}
+        )}
       </span>
 
       {children}
@@ -517,15 +486,12 @@ function FormField({
   );
 }
 
-function Alert({
-  type,
-  message,
-}) {
-  const success =
-    type === "success";
+function Alert({ type, message }) {
+  const success = type === "success";
 
   return (
     <div
+      role={success ? "status" : "alert"}
       className={`mt-5 rounded-xl border px-4 py-3 text-sm ${
         success
           ? "border-emerald-200 bg-emerald-50 text-emerald-800"
@@ -537,13 +503,14 @@ function Alert({
   );
 }
 
-function PageState({
-  message,
-}) {
+function PageState({ message }) {
   return (
     <main className="flex min-h-[calc(100vh-5rem)] items-center justify-center px-5">
-      <div className="text-center">
-        <RefreshCw className="mx-auto h-8 w-8 animate-spin text-blue-900" />
+      <div role="status" className="text-center">
+        <RefreshCw
+          aria-hidden="true"
+          className="mx-auto h-8 w-8 animate-spin text-blue-900"
+        />
 
         <p className="mt-4 font-semibold text-slate-700">
           {message}
@@ -553,22 +520,24 @@ function PageState({
   );
 }
 
-function getAssignmentLabel(
-  assignment,
-) {
+function getAssignmentId(assignment) {
+  return assignment.assignment_id || assignment.id;
+}
+
+function getAssignmentLabel(assignment) {
   const studentName =
     assignment.student?.full_name ||
     assignment.student_name ||
     assignment.full_name ||
     "Student";
 
-  const developmentArea =
+  const course =
     assignment.development_area ||
     assignment.developmentArea ||
-    "Development area";
+    "Course / Development Area";
 
-  return `${studentName} — ${developmentArea}`;
+  return `${studentName} — ${course}`;
 }
 
 const inputClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-100";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50";

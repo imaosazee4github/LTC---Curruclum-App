@@ -25,10 +25,16 @@ const primaryNavigation = [
     available: true,
   },
   {
+    label: "My Coaching",
+    path: "/student/coaching",
+    icon: "◇",
+    available: true,
+  },
+  {
     label: "My Learning",
     path: "/student/learning",
     icon: "▤",
-    available: false,
+    available: true,
   },
   {
     label: "My Responsibilities",
@@ -138,7 +144,6 @@ function StudentSidebar({
   open,
   onClose,
   profile,
-  studentProfile,
   signingOut,
   onSignOut,
 }) {
@@ -186,9 +191,7 @@ function StudentSidebar({
               {profile?.full_name || "Pioneer Student"}
             </p>
 
-            <p className="mt-1 truncate text-xs text-blue-200">
-              {studentProfile?.student_number || "Student number pending"}
-            </p>
+            <p className="mt-1 truncate text-xs text-blue-200">Student</p>
           </div>
         </div>
       </div>

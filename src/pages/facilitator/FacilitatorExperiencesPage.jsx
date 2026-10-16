@@ -1,15 +1,29 @@
-import {
-  BookOpen,
-  CalendarDays,
-  ClipboardList,
-  FileText,
-  MapPin,
-  RefreshCw,
-  Users,
-} from "lucide-react";
+import { useState } from "react";
 
 import { useFacilitatorDashboard } from "../../hooks/useFacilitatorDashboard";
 import FacilitatorLayout from "../../layouts/FacilitatorLayout";
+
+const resourceTypes = [
+  "document",
+  "presentation",
+  "video",
+  "audio",
+  "link",
+  "worksheet",
+  "equipment",
+  "other",
+];
+
+const activityTypes = [
+  "individual",
+  "pair",
+  "group",
+  "discussion",
+  "presentation",
+  "practical",
+  "reflection",
+  "other",
+];
 
 export default function FacilitatorExperiencesPage() {
   const {
@@ -18,429 +32,492 @@ export default function FacilitatorExperiencesPage() {
     facilitatorDashboardFetching,
     facilitatorDashboardError,
     refreshFacilitatorDashboard,
+    createResource,
+    createActivity,
   } = useFacilitatorDashboard();
 
-  if (facilitatorDashboardLoading) {
-    return (
-      <FacilitatorLayout>
-        <PageMessage message="Loading your learning experiences..." />
-      </FacilitatorLayout>
-    );
-  }
-
-  if (
-    facilitatorDashboardError ||
-    !facilitatorDashboard
-  ) {
-    return (
-      <FacilitatorLayout>
-        <PageMessage
-          error
-          message={
-            facilitatorDashboardError?.message ||
-            "Your learning experiences could not be loaded."
-          }
-        />
-      </FacilitatorLayout>
-    );
-  }
-
-  const experiences =
-    facilitatorDashboard.experiences || [];
+  const experiences = facilitatorDashboard?.experiences || [];
 
   return (
     <FacilitatorLayout>
       <main className="p-5 md:p-8">
-        <div className="mx-auto max-w-7xl">
-          <header className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
+        <div className="mx-auto max-w-6xl">
+          <header className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-                Facilitation
+                Facilitator Portal
               </p>
 
-              <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-                My Learning Experiences
+              <h1 className="mt-2 text-3xl font-bold text-blue-950">
+                My Courses
               </h1>
 
-              <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-                Review your assigned learning experiences, students,
-                sessions, resources, activities and follow-up needs.
+              <p className="mt-3 max-w-2xl leading-7 text-slate-600">
+                Review your assigned courses and share resources and
+                activities with enrolled students.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                refreshFacilitatorDashboard()
-              }
-              disabled={
-                facilitatorDashboardFetching
-              }
-              className="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => refreshFacilitatorDashboard()}
+              disabled={facilitatorDashboardFetching}
+              className="rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 disabled:opacity-60"
             >
-              <RefreshCw
-                size={18}
-                className={
-                  facilitatorDashboardFetching
-                    ? "animate-spin"
-                    : ""
-                }
-              />
-
-              {facilitatorDashboardFetching
-                ? "Refreshing..."
-                : "Refresh"}
+              {facilitatorDashboardFetching ? "Refreshing..." : "Refresh"}
             </button>
           </header>
 
-          <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <SummaryCard
-              label="Experiences"
-              value={experiences.length}
-              icon={BookOpen}
-              tone="blue"
-            />
+          {facilitatorDashboardLoading ? (
+            <p role="status" className="mt-8 text-slate-600">
+              Loading your courses...
+            </p>
+          ) : facilitatorDashboardError || !facilitatorDashboard ? (
+            <Message error>
+              {facilitatorDashboardError?.message ||
+                "Your courses could not be loaded."}
+            </Message>
+          ) : experiences.length === 0 ? (
+            <Message>
+              No courses are assigned to you yet. Courses appear after
+              your facilitator assignment is saved in Staff Management.
+            </Message>
+          ) : (
+            <>
+              <p className="mt-6 text-sm text-slate-500">
+                {experiences.length} course{" "}
+                {experiences.length === 1 ? "assignment" : "assignments"}.
+                Student counts are shown separately for each course.
+              </p>
 
-            <SummaryCard
-              label="Students"
-              value={sumField(
-                experiences,
-                "student_count",
-              )}
-              icon={Users}
-              tone="purple"
-            />
-
-            <SummaryCard
-              label="Sessions"
-              value={sumField(
-                experiences,
-                "session_count",
-              )}
-              icon={CalendarDays}
-              tone="green"
-            />
-
-            <SummaryCard
-              label="Follow-Ups"
-              value={sumField(
-                experiences,
-                "open_follow_up_count",
-              )}
-              icon={ClipboardList}
-              tone="amber"
-            />
-          </section>
-
-          <section className="mt-8">
-            {experiences.length > 0 ? (
-              <div className="grid gap-6 xl:grid-cols-2">
-                {experiences.map(
-                  (experience) => (
-                    <ExperienceCard
-                      key={
-                        experience.assignment_id
-                      }
-                      experience={experience}
-                    />
-                  ),
-                )}
+              <div className="mt-4 grid items-start gap-6 xl:grid-cols-2">
+                {experiences.map((experience) => (
+                  <CourseCard
+                    key={
+                      experience.assignment_id ||
+                      experience.learning_experience_id ||
+                      experience.id
+                    }
+                    experience={experience}
+                    createResource={createResource}
+                    createActivity={createActivity}
+                  />
+                ))}
               </div>
-            ) : (
-              <EmptyState />
-            )}
-          </section>
+            </>
+          )}
         </div>
       </main>
     </FacilitatorLayout>
   );
 }
 
-function ExperienceCard({
-  experience,
-}) {
+function CourseCard({ experience, createResource, createActivity }) {
+  const [mode, setMode] = useState(null);
+
+  const experienceId =
+    experience.learning_experience_id || experience.id;
+
+  const canCreate = ["planned", "active"].includes(experience.status);
+
   return (
     <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-wider text-blue-700">
-              {experience.code ||
-                "Learning Experience"}
-            </p>
+      <header className="border-b border-slate-200 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-xl font-bold text-blue-950">
+            {experience.title || "Course"}
+          </h2>
 
-            <h2 className="mt-1 text-xl font-bold text-slate-950">
-              {experience.title}
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-500">
-              {formatLabel(
-                experience.assignment_role,
-              )}
-            </p>
-          </div>
-
-          <StatusBadge
-            status={experience.status}
-          />
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+            {formatLabel(experience.status)}
+          </span>
         </div>
 
-        {experience.description ? (
-          <p className="mt-4 leading-7 text-slate-600">
+        {experience.description && (
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
             {experience.description}
           </p>
-        ) : null}
-      </div>
+        )}
+      </header>
 
-      <div className="grid gap-4 p-5 sm:grid-cols-2">
-        <Detail
-          icon={CalendarDays}
-          label="Dates"
-          value={formatDateRange(
-            experience.start_date,
-            experience.end_date,
-          )}
-        />
+      <div className="p-5">
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <Detail
+            label="Starts"
+            value={formatDate(experience.start_date)}
+          />
+          <Detail
+            label="Ends"
+            value={formatDate(experience.end_date)}
+          />
+          <Detail
+            label="Location"
+            value={experience.location || "Not provided"}
+          />
+          <Detail
+            label="Delivery"
+            value={formatLabel(experience.delivery_mode)}
+          />
+        </dl>
 
-        <Detail
-          icon={MapPin}
-          label="Location"
-          value={
-            experience.location ||
-            "Not specified"
-          }
-        />
+        <dl className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4">
+          <Detail
+            label="Enrolled Students"
+            value={Number(experience.student_count) || 0}
+          />
+          <Detail
+            label="Sessions"
+            value={Number(experience.session_count) || 0}
+          />
+          <Detail
+            label="Resources"
+            value={Number(experience.resource_count) || 0}
+          />
+          <Detail
+            label="Activities"
+            value={Number(experience.activity_count) || 0}
+          />
+        </dl>
 
-        <Detail
-          icon={BookOpen}
-          label="Delivery"
-          value={formatLabel(
-            experience.delivery_mode,
-          )}
-        />
+        {canCreate && experienceId ? (
+          <>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => setMode("resource")}
+                aria-expanded={mode === "resource"}
+                className="rounded-lg bg-blue-950 px-4 py-3 text-sm font-semibold text-white"
+              >
+                Add Resource
+              </button>
 
-        <Detail
-          icon={Users}
-          label="Students"
-          value={
-            experience.student_count || 0
-          }
-        />
-      </div>
+              <button
+                type="button"
+                onClick={() => setMode("activity")}
+                aria-expanded={mode === "activity"}
+                className="rounded-lg border border-blue-950 px-4 py-3 text-sm font-semibold text-blue-950"
+              >
+                Add Activity
+              </button>
+            </div>
 
-      <div className="grid grid-cols-2 gap-px border-t border-slate-200 bg-slate-200 sm:grid-cols-4">
-        <ExperienceStat
-          label="Sessions"
-          value={
-            experience.session_count || 0
-          }
-        />
-
-        <ExperienceStat
-          label="Resources"
-          value={
-            experience.resource_count || 0
-          }
-        />
-
-        <ExperienceStat
-          label="Activities"
-          value={
-            experience.activity_count || 0
-          }
-        />
-
-        <ExperienceStat
-          label="Follow-Ups"
-          value={
-            experience
-              .open_follow_up_count || 0
-          }
-        />
+            {mode && (
+              <ContentForm
+                key={mode}
+                mode={mode}
+                experienceId={experienceId}
+                createResource={createResource}
+                createActivity={createActivity}
+                onClose={() => setMode(null)}
+              />
+            )}
+          </>
+        ) : (
+          <p className="mt-5 text-sm text-slate-500">
+            {!experienceId
+              ? "The course identifier was not returned. Content creation is unavailable."
+              : "New content can be added to planned or active courses."}
+          </p>
+        )}
       </div>
     </article>
   );
 }
 
-function Detail({
-  icon: Icon,
-  label,
-  value,
+function ContentForm({
+  mode,
+  experienceId,
+  createResource,
+  createActivity,
+  onClose,
 }) {
+  const isResource = mode === "resource";
+
+  const [form, setForm] = useState({
+    title: "",
+    type: isResource ? "document" : "individual",
+    description: "",
+    resourceUrl: "",
+    instructions: "",
+    expectedOutcome: "",
+    status: "active",
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+    setError("");
+    setSuccess("");
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (saving) return;
+
+    setError("");
+    setSuccess("");
+
+    if (!form.title.trim()) {
+      setError("Enter a title.");
+      return;
+    }
+
+    if (isResource && form.resourceUrl.trim()) {
+      try {
+        const url = new URL(form.resourceUrl.trim());
+
+        if (!["https:", "http:"].includes(url.protocol)) {
+          throw new Error();
+        }
+      } catch {
+        setError("Enter a valid http:// or https:// resource link.");
+        return;
+      }
+    }
+
+    setSaving(true);
+
+    try {
+      const common = {
+        learningExperienceId: experienceId,
+        title: form.title.trim(),
+        description: form.description,
+        status: form.status,
+      };
+
+      const result = isResource
+        ? await createResource({
+            ...common,
+            resourceType: form.type,
+            resourceUrl: form.resourceUrl.trim(),
+          })
+        : await createActivity({
+            ...common,
+            activityType: form.type,
+            instructions: form.instructions,
+            expectedOutcome: form.expectedOutcome,
+          });
+
+      if (!result?.success) {
+        throw new Error("The content could not be saved.");
+      }
+
+      setForm((current) => ({
+        ...current,
+        title: "",
+        description: "",
+        resourceUrl: "",
+        instructions: "",
+        expectedOutcome: "",
+      }));
+
+      setSuccess(
+        form.status === "active"
+          ? "Saved. Enrolled students can view this in My Learning."
+          : "Saved without publishing to students.",
+      );
+    } catch (saveError) {
+      setError(saveError.message || "The content could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="flex items-start gap-3 rounded-lg bg-slate-50 p-4">
-      <Icon
-        size={19}
-        className="mt-0.5 shrink-0 text-blue-700"
-      />
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          {label}
-        </p>
-
-        <p className="mt-1 font-semibold text-slate-900">
-          {value}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ExperienceStat({
-  label,
-  value,
-}) {
-  return (
-    <div className="bg-white p-4 text-center">
-      <p className="text-2xl font-bold text-slate-950">
-        {value}
-      </p>
-
-      <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  icon: Icon,
-  tone,
-}) {
-  const tones = {
-    blue: "bg-blue-100 text-blue-700",
-    purple:
-      "bg-purple-100 text-purple-700",
-    green:
-      "bg-emerald-100 text-emerald-700",
-    amber:
-      "bg-amber-100 text-amber-700",
-  };
-
-  return (
-    <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-slate-500">
-            {label}
-          </p>
-
-          <p className="mt-3 text-3xl font-bold text-slate-950">
-            {value}
-          </p>
-        </div>
-
-        <div
-          className={`rounded-xl p-3 ${tones[tone]}`}
-        >
-          <Icon size={23} />
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function StatusBadge({
-  status,
-}) {
-  const normalized =
-    status || "unknown";
-
-  const tone =
-    normalized === "active"
-      ? "bg-emerald-100 text-emerald-700"
-      : normalized === "planned"
-        ? "bg-blue-100 text-blue-700"
-        : "bg-slate-100 text-slate-600";
-
-  return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${tone}`}
+    <form
+      onSubmit={handleSubmit}
+      aria-busy={saving}
+      className="mt-5 rounded-xl border border-blue-100 bg-blue-50/40 p-4"
     >
-      {formatLabel(normalized)}
-    </span>
+      <h3 className="font-bold text-blue-950">
+        {isResource ? "Add Course Resource" : "Add Course Activity"}
+      </h3>
+
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        This content applies to the whole course. Choose Active to
+        make it visible to enrolled students.
+      </p>
+
+      <fieldset disabled={saving} className="mt-4 min-w-0 space-y-4">
+        <Field label="Title *">
+          <input
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            required
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label={isResource ? "Resource Type" : "Activity Type"}>
+          <select
+            name="type"
+            value={form.type}
+            onChange={handleChange}
+            className={inputClass}
+          >
+            {(isResource ? resourceTypes : activityTypes).map((type) => (
+              <option key={type} value={type}>
+                {formatLabel(type)}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field label="Description">
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            rows={3}
+            className={inputClass}
+          />
+        </Field>
+
+        {isResource ? (
+          <Field label="Resource Link (optional)">
+            <input
+              name="resourceUrl"
+              type="url"
+              value={form.resourceUrl}
+              onChange={handleChange}
+              placeholder="https://..."
+              className={inputClass}
+            />
+          </Field>
+        ) : (
+          <>
+            <Field label="Instructions">
+              <textarea
+                name="instructions"
+                value={form.instructions}
+                onChange={handleChange}
+                rows={3}
+                className={inputClass}
+              />
+            </Field>
+
+            <Field label="Expected Outcome">
+              <textarea
+                name="expectedOutcome"
+                value={form.expectedOutcome}
+                onChange={handleChange}
+                rows={3}
+                className={inputClass}
+              />
+            </Field>
+          </>
+        )}
+
+        <Field label="Visibility">
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            className={inputClass}
+          >
+            <option value="active">Active — visible to students</option>
+            <option value={isResource ? "inactive" : "planned"}>
+              {isResource
+                ? "Inactive — hidden from students"
+                : "Planned — hidden from students"}
+            </option>
+          </select>
+        </Field>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="submit"
+            className="rounded-lg bg-blue-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            {saving ? "Saving..." : "Save"}
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+          >
+            Close
+          </button>
+        </div>
+      </fieldset>
+
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      {success && (
+        <p role="status" className="mt-4 text-sm text-green-800">
+          {success}
+        </p>
+      )}
+    </form>
   );
 }
 
-function EmptyState() {
+function Field({ label, children }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-700">
-        <FileText size={26} />
-      </div>
+    <label className="block">
+      <span className="mb-2 block text-sm font-semibold text-slate-700">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
 
-      <h2 className="mt-5 text-xl font-bold text-slate-950">
-        No assigned learning experiences
-      </h2>
-
-      <p className="mx-auto mt-2 max-w-xl text-slate-600">
-        Learning experiences assigned to you by the
-        administrator will appear here.
-      </p>
+function Detail({ label, value }) {
+  return (
+    <div>
+      <dt className="text-xs font-semibold text-slate-500">{label}</dt>
+      <dd className="mt-1 text-sm font-semibold text-slate-900">
+        {value}
+      </dd>
     </div>
   );
 }
 
-function PageMessage({
-  message,
-  error = false,
-}) {
+function Message({ error = false, children }) {
   return (
-    <main className="p-5 md:p-8">
-      <div
-        className={`mx-auto max-w-3xl rounded-xl border px-5 py-10 text-center ${
-          error
-            ? "border-red-200 bg-red-50 text-red-700"
-            : "border-slate-200 bg-white text-slate-600"
-        }`}
-      >
-        {message}
-      </div>
-    </main>
-  );
-}
-
-function sumField(
-  items,
-  field,
-) {
-  return items.reduce(
-    (total, item) =>
-      total + Number(item[field] || 0),
-    0,
+    <div
+      role={error ? "alert" : "status"}
+      className={`mt-8 rounded-xl border p-6 text-sm leading-7 ${
+        error
+          ? "border-red-200 bg-red-50 text-red-700"
+          : "border-slate-200 bg-white text-slate-600"
+      }`}
+    >
+      {children}
+    </div>
   );
 }
 
 function formatLabel(value) {
-  if (!value) {
-    return "Not specified";
-  }
-
-  return String(value)
+  return String(value || "Not provided")
     .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) =>
-      letter.toUpperCase(),
-    );
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function formatDateRange(
-  startDate,
-  endDate,
-) {
-  if (!startDate && !endDate) {
-    return "Dates not specified";
-  }
+function formatDate(value) {
+  if (!value) return "Not set";
 
-  if (!endDate) {
-    return startDate;
-  }
+  const date = new Date(`${value}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) return "Not available";
 
-  if (!startDate) {
-    return endDate;
-  }
-
-  return `${startDate} – ${endDate}`;
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
 }
+
+const inputClass =
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100 disabled:opacity-60";

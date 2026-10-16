@@ -1,13 +1,14 @@
 import {
-  createContext,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 import {
   getCurrentSession,
+  getMyAccessRoles,
   getProfile,
   registerStudent as registerStudentRequest,
   signIn as signInRequest,
@@ -15,76 +16,125 @@ import {
   subscribeToAuthChanges,
 } from "../services/authService";
 
-export const AuthContext =
-  createContext(null);
+import { AuthContext } from "./authContextStore.js";
 
-export function AuthProvider({
-  children,
-}) {
-  const [session, setSession] =
-    useState(null);
 
-  const [user, setUser] =
-    useState(null);
+function readSelectedRole(userId) {
+  try {
+    return sessionStorage.getItem(`ltc-active-role:${userId}`);
+  } catch {
+    return null;
+  }
+}
 
-  const [profile, setProfile] =
-    useState(null);
+function saveSelectedRole(userId, role) {
+  try {
+    const key = `ltc-active-role:${userId}`;
 
-  const [loading, setLoading] =
-    useState(true);
+    if (role) {
+      sessionStorage.setItem(key, role);
+    } else {
+      sessionStorage.removeItem(key);
+    }
+  } catch {
+    // Role selection still works when browser storage is unavailable.
+  }
+}
 
-  const [authError, setAuthError] =
-    useState("");
+export function AuthProvider({ children }) {
+  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [activeRole, setActiveRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
 
-  const loadProfile = useCallback(
-    async (userId) => {
-      if (!userId) {
-        setProfile(null);
-        return null;
-      }
+  const currentUserId = useRef(null);
+  const loadVersion = useRef(0);
 
-      const profileData =
-        await getProfile(userId);
+  const clearAccount = useCallback(() => {
+    loadVersion.current += 1;
+    currentUserId.current = null;
 
-      setProfile(profileData);
+    setProfile(null);
+    setAvailableRoles([]);
+    setActiveRole(null);
+  }, []);
 
-      return profileData;
-    },
-    [],
-  );
+  const loadProfile = useCallback(async (userId) => {
+    const version = ++loadVersion.current;
+    currentUserId.current = userId;
+
+    if (!userId) {
+      setProfile(null);
+      setAvailableRoles([]);
+      setActiveRole(null);
+      return null;
+    }
+
+    // Clear previous permissions while checking the current account.
+    setProfile(null);
+    setAvailableRoles([]);
+    setActiveRole(null);
+
+    const profileData = await getProfile(userId);
+
+    let roles = [];
+
+    if (profileData?.account_status === "active") {
+      const access = await getMyAccessRoles();
+      roles = access.roles;
+    }
+
+    if (
+      version !== loadVersion.current ||
+      currentUserId.current !== userId
+    ) {
+      return null;
+    }
+
+    const rememberedRole = readSelectedRole(userId);
+
+    const selectedRole = roles.includes(rememberedRole)
+      ? rememberedRole
+      : roles.includes(profileData?.role)
+        ? profileData.role
+        : roles[0] || null;
+
+    setProfile(profileData);
+    setAvailableRoles(roles);
+    setActiveRole(selectedRole);
+
+    saveSelectedRole(userId, selectedRole);
+
+    return profileData;
+  }, []);
 
   useEffect(() => {
     let active = true;
+    let authEventVersion = 0;
+    const timers = new Set();
 
-    async function initializeAuth() {
+    async function applySession(nextSession) {
+      if (!active) return;
+
+      setLoading(true);
+      setAuthError("");
+      setSession(nextSession);
+      setUser(nextSession?.user || null);
+
       try {
-        const currentSession =
-          await getCurrentSession();
-
-        if (!active) {
-          return;
-        }
-
-        setSession(currentSession);
-        setUser(
-          currentSession?.user || null,
-        );
-
-        if (currentSession?.user?.id) {
-          await loadProfile(
-            currentSession.user.id,
-          );
+        if (nextSession?.user?.id) {
+          await loadProfile(nextSession.user.id);
+        } else {
+          clearAccount();
         }
       } catch (error) {
         if (active) {
-          console.error(
-            "Authentication initialization failed:",
-            error,
-          );
-
+          clearAccount();
           setAuthError(
-            error.message ||
-              "Unable to load your account.",
+            error.message || "Unable to load your account.",
           );
         }
       } finally {
@@ -94,123 +144,157 @@ export function AuthProvider({
       }
     }
 
-    initializeAuth();
+    async function initializeAuth() {
+      const startingVersion = authEventVersion;
 
-    const subscription =
-      subscribeToAuthChanges(
-        (_event, nextSession) => {
-          /*
-           * Run profile loading after the
-           * authentication callback completes.
-           */
-          window.setTimeout(async () => {
-            if (!active) {
-              return;
-            }
+      try {
+        const currentSession = await getCurrentSession();
 
-            try {
-              setLoading(true);
-              setAuthError("");
+        if (active && startingVersion === authEventVersion) {
+          await applySession(currentSession);
+        }
+      } catch (error) {
+        if (active && startingVersion === authEventVersion) {
+          clearAccount();
+          setAuthError(
+            error.message || "Unable to load your account.",
+          );
+          setLoading(false);
+        }
+      }
+    }
 
-              setSession(nextSession);
-              setUser(
-                nextSession?.user || null,
-              );
+    const subscription = subscribeToAuthChanges(
+      (_event, nextSession) => {
+        const eventVersion = ++authEventVersion;
 
-              if (
-                nextSession?.user?.id
-              ) {
-                await loadProfile(
-                  nextSession.user.id,
-                );
-              } else {
-                setProfile(null);
-              }
-            } catch (error) {
-              if (active) {
-                console.error(
-                  "Authentication state update failed:",
-                  error,
-                );
+        // Run database requests after the auth callback completes.
+        const timer = window.setTimeout(() => {
+          timers.delete(timer);
 
-                setAuthError(
-                  error.message ||
-                    "Unable to load your account.",
-                );
-              }
-            } finally {
-              if (active) {
-                setLoading(false);
-              }
-            }
-          }, 0);
-        },
-      );
+          if (active && eventVersion === authEventVersion) {
+            void applySession(nextSession);
+          }
+        }, 0);
+
+        timers.add(timer);
+      },
+    );
+
+    void initializeAuth();
 
     return () => {
       active = false;
+      loadVersion.current += 1;
+      timers.forEach((timer) => window.clearTimeout(timer));
       subscription?.unsubscribe();
     };
-  }, [loadProfile]);
+  }, [loadProfile, clearAccount]);
 
-  const registerStudent =
-    useCallback(async (credentials) => {
-      setAuthError("");
+  const registerStudent = useCallback(async (credentials) => {
+    setAuthError("");
 
-      try {
-        return await registerStudentRequest(
-          credentials,
+    try {
+      return await registerStudentRequest(credentials);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
+  }, []);
+
+  const signIn = useCallback(async (credentials) => {
+    setAuthError("");
+
+    try {
+      return await signInRequest(credentials);
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
+  }, []);
+
+  const selectRole = useCallback(
+    (nextRole) => {
+      if (
+        !profile?.id ||
+        profile.account_status !== "active" ||
+        !availableRoles.includes(nextRole)
+      ) {
+        throw new Error(
+          "This role is not available for your account.",
         );
-      } catch (error) {
-        setAuthError(error.message);
-        throw error;
-      }
-    }, []);
-
-  const signIn =
-    useCallback(async (credentials) => {
-      setAuthError("");
-
-      try {
-        return await signInRequest(
-          credentials,
-        );
-      } catch (error) {
-        setAuthError(error.message);
-        throw error;
-      }
-    }, []);
-
-  const signOut =
-    useCallback(async () => {
-      setAuthError("");
-
-      try {
-        await signOutRequest();
-
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-      } catch (error) {
-        setAuthError(error.message);
-        throw error;
-      }
-    }, []);
-
-  const refreshProfile =
-    useCallback(async () => {
-      if (!user?.id) {
-        setProfile(null);
-        return null;
       }
 
-      return loadProfile(user.id);
-    }, [loadProfile, user?.id]);
+      saveSelectedRole(profile.id, nextRole);
+      setActiveRole(nextRole);
+    },
+    [profile, availableRoles],
+  );
 
-  const clearAuthError =
-    useCallback(() => {
-      setAuthError("");
-    }, []);
+  const signOut = useCallback(async () => {
+    setAuthError("");
+
+    try {
+      await signOutRequest();
+
+      if (currentUserId.current) {
+        saveSelectedRole(currentUserId.current, null);
+      }
+
+      setSession(null);
+      setUser(null);
+      clearAccount();
+    } catch (error) {
+      setAuthError(error.message);
+      throw error;
+    }
+  }, [clearAccount]);
+
+  // const refreshProfile = useCallback(async () => {
+  //   if (!user?.id) {
+  //     clearAccount();
+  //     return null;
+  //   }
+
+  //   setLoading(true);
+  //   setAuthError("");
+
+  //   try {
+  //     return await loadProfile(user.id);
+  //   } catch (error) {
+  //     clearAccount();
+  //     setAuthError(error.message);
+  //     throw error;
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [loadProfile, clearAccount, user?.id]);
+
+  const userId = user?.id;
+
+const refreshProfile = useCallback(async () => {
+  if (!userId) {
+    clearAccount();
+    return null;
+  }
+
+  setLoading(true);
+  setAuthError("");
+
+  try {
+    return await loadProfile(userId);
+  } catch (error) {
+    clearAccount();
+    setAuthError(error.message);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+}, [loadProfile, clearAccount, userId]);
+
+  const clearAuthError = useCallback(() => {
+    setAuthError("");
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -218,43 +302,44 @@ export function AuthProvider({
       user,
       profile,
 
-      role:
-        profile?.role || null,
+      // Used by existing hooks, route guards and dashboard redirects.
+      role: activeRole,
+      activeRole,
+      primaryRole: profile?.role || null,
+      availableRoles,
 
-      accountStatus:
-        profile?.account_status ||
-        null,
-
+      accountStatus: profile?.account_status || null,
       loading,
       authError,
 
       registerStudent,
       signIn,
       signOut,
+      selectRole,
       refreshProfile,
       clearAuthError,
 
-      isAuthenticated:
-        Boolean(session?.user),
+      isAuthenticated: Boolean(session?.user),
     }),
     [
       session,
       user,
       profile,
+      activeRole,
+      availableRoles,
       loading,
       authError,
       registerStudent,
       signIn,
       signOut,
+      selectRole,
       refreshProfile,
       clearAuthError,
     ],
   );
 
   return (
-    <AuthContext.Provider
-      value={value}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

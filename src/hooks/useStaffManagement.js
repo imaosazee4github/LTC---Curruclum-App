@@ -7,120 +7,112 @@ import {
 import { useAuth } from "./useAuth";
 
 import {
-  assignStaffRole,
+  appointStaffWithClass,
   getStaffManagementData,
 } from "../services/superAdminService";
 
-export function useStaffManagement() {
-  const queryClient =
-    useQueryClient();
+import {
+  getStaffAllocationManagementData,
+} from "../services/staffAllocationService";
 
-  const {
-    profile,
-    role,
-  } = useAuth();
+export function useStaffManagement() {
+  const queryClient = useQueryClient();
+  const { profile, role } = useAuth();
 
   const enabled =
-    Boolean(profile?.id) &&
-    role === "super_admin";
+    Boolean(profile?.id) && role === "super_admin";
 
+  const staffQuery = useQuery({
+    queryKey: ["staff-management", profile?.id],
+    queryFn: getStaffManagementData,
+    enabled,
+    staleTime: 30 * 1000,
+  });
 
-  const staffManagementQuery =
-    useQuery({
-      queryKey: [
-        "staff-management",
-        profile?.id,
-      ],
-
-      queryFn:
-        getStaffManagementData,
-
-      enabled,
-
-      staleTime:
-        30 * 1000,
-    });
-
+  const allocationQuery = useQuery({
+    queryKey: ["staff-allocation-management", profile?.id],
+    queryFn: getStaffAllocationManagementData,
+    enabled,
+    staleTime: 30 * 1000,
+  });
 
   async function refreshStaffData() {
     await Promise.all([
       queryClient.invalidateQueries({
-        queryKey: [
-          "staff-management",
-        ],
+        queryKey: ["staff-management"],
       }),
 
       queryClient.invalidateQueries({
-        queryKey: [
-          "super-admin-dashboard",
-        ],
+        queryKey: ["staff-allocation-management"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["super-admin-dashboard"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["super-admin-students"],
       }),
     ]);
   }
 
+  const appointMutation = useMutation({
+    mutationFn: appointStaffWithClass,
 
-  const assignStaffMutation =
-    useMutation({
-      mutationFn:
-        assignStaffRole,
+    onSuccess: refreshStaffData,
 
-      onSuccess:
-        refreshStaffData,
+    onError: (error) => {
+      console.error("Staff assignment failed:", error);
+    },
+  });
 
-      onError: (error) => {
-        console.error(
-          "Staff role assignment failed:",
-          error,
-        );
-      },
-    });
+  async function refreshStaffManagement() {
+    return Promise.all([
+      staffQuery.refetch(),
+      allocationQuery.refetch(),
+    ]);
+  }
 
+  const courseClasses = (
+    allocationQuery.data?.classes || []
+  ).filter((programmeClass) =>
+    ["planned", "active"].includes(programmeClass.status),
+  );
 
   return {
-    staffManagement:
-      staffManagementQuery.data ||
-      null,
+    staffManagement: staffQuery.data || null,
 
-    staffSummary:
-      staffManagementQuery
-        .data?.summary || null,
+    staffSummary: staffQuery.data?.summary || null,
 
-    staff:
-      staffManagementQuery
-        .data?.staff || [],
+    staff: staffQuery.data?.staff || [],
 
     eligibleAccounts:
-      staffManagementQuery
-        .data?.eligibleAccounts || [],
+      staffQuery.data?.eligibleAccounts || [],
+
+    courseClasses,
+
+    classAllocations:
+      allocationQuery.data?.allocations || [],
 
     staffManagementLoading:
-      staffManagementQuery.isLoading,
+      staffQuery.isLoading || allocationQuery.isLoading,
 
     staffManagementFetching:
-      staffManagementQuery.isFetching,
+      staffQuery.isFetching || allocationQuery.isFetching,
 
     staffManagementError:
-      staffManagementQuery.error,
+      staffQuery.error || allocationQuery.error,
 
-    refreshStaffManagement:
-      staffManagementQuery.refetch,
+    refreshStaffManagement,
 
+    appointStaff: appointMutation.mutateAsync,
 
-    appointStaff:
-      assignStaffMutation
-        .mutateAsync,
+    appointingStaff: appointMutation.isPending,
 
-    appointingStaff:
-      assignStaffMutation
-        .isPending,
+    appointStaffError: appointMutation.error,
 
-    appointStaffError:
-      assignStaffMutation.error,
+    appointStaffResult: appointMutation.data,
 
-    appointStaffResult:
-      assignStaffMutation.data,
-
-    resetAppointStaff:
-      assignStaffMutation.reset,
+    resetAppointStaff: appointMutation.reset,
   };
 }

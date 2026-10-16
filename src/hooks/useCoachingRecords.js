@@ -1,24 +1,19 @@
-import {
-  useQuery,
-} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "./useAuth";
 
 import {
+  getMyCoachDashboard,
   getMyCoachingRecords,
 } from "../services/coachService";
 
 export function useCoachingRecords({
   assignmentId = null,
 } = {}) {
-  const {
-    profile,
-    role,
-  } = useAuth();
+  const { profile, role } = useAuth();
 
   const enabled =
-    Boolean(profile?.id) &&
-    role === "coach";
+    Boolean(profile?.id) && role === "coach";
 
   const recordsQuery = useQuery({
     queryKey: [
@@ -28,14 +23,31 @@ export function useCoachingRecords({
     ],
 
     queryFn: () =>
-      getMyCoachingRecords({
-        assignmentId,
-      }),
+      getMyCoachingRecords({ assignmentId }),
 
     enabled,
-
     staleTime: 30 * 1000,
   });
+
+  // Reuse the dashboard query and its cached assignments.
+  const dashboardQuery = useQuery({
+    queryKey: [
+      "coach-dashboard",
+      profile?.id,
+    ],
+
+    queryFn: getMyCoachDashboard,
+
+    enabled,
+    staleTime: 30 * 1000,
+  });
+
+  async function refreshCoachingRecords() {
+    await Promise.allSettled([
+      recordsQuery.refetch(),
+      dashboardQuery.refetch(),
+    ]);
+  }
 
   return {
     coachingRecords:
@@ -50,19 +62,23 @@ export function useCoachingRecords({
       },
 
     records:
-      recordsQuery.data?.records ||
-      [],
+      recordsQuery.data?.records || [],
+
+    coachingAssignments:
+      dashboardQuery.data?.assignments || [],
 
     coachingRecordsLoading:
-      recordsQuery.isLoading,
+      recordsQuery.isLoading ||
+      dashboardQuery.isLoading,
 
     coachingRecordsFetching:
-      recordsQuery.isFetching,
+      recordsQuery.isFetching ||
+      dashboardQuery.isFetching,
 
     coachingRecordsError:
-      recordsQuery.error,
+      recordsQuery.error ||
+      dashboardQuery.error,
 
-    refreshCoachingRecords:
-      recordsQuery.refetch,
+    refreshCoachingRecords,
   };
 }

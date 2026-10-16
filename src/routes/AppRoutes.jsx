@@ -51,6 +51,8 @@ import InstructorAssignmentsPage from "../pages/instructor/InstructorAssignments
 import InstructorFollowUpsPage from "../pages/instructor/InstructorFollowUpsPage";
 import SuperAdminStudentDetailsPage from "../pages/super-admin/SuperAdminStudentDetailsPage";
 import StudentDailySchedulePage from "../pages/student/StudentDailySchedulePage";
+import StudentCoachingPage from "../pages/student/StudentCoachingPage";
+import StudentLearningPage from "../pages/student/StudentLearningPage";
 
 export default function AppRoutes() {
   return (
@@ -384,6 +386,14 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/student/coaching"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentCoachingPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/coach/assignments"
@@ -426,6 +436,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["super_admin"]}>
             <CoachOversightPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/learning"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentLearningPage />
           </ProtectedRoute>
         }
       />

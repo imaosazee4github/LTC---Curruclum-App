@@ -1289,6 +1289,105 @@ export async function getSuperAdminStudentDetails(profileId) {
   };
 }
 
+export async function getPendingRegistrations() {
+  const { data, error } = await supabase.rpc(
+    "get_pending_registrations",
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error("Pending registrations could not be loaded.");
+  }
+
+  return Array.isArray(data.registrations)
+    ? data.registrations
+    : [];
+}
+
+export async function approveRegistration(profileId) {
+  if (!profileId) {
+    throw new Error("Select a registration.");
+  }
+
+  const { data, error } = await supabase.rpc(
+    "approve_registration",
+    {
+      p_profile_id: profileId,
+    },
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error("The registration could not be approved.");
+  }
+
+  return data;
+}
+
+export async function appointStaffWithClass({
+  profileId,
+  role,
+  classId,
+  specialization,
+  biography,
+  supervisorType,
+}) {
+  if (!profileId) {
+    throw new Error("Select an account.");
+  }
+
+  const allowedRoles = [
+    "instructor",
+    "facilitator",
+    "coach",
+    "supervisor",
+  ];
+
+  if (!allowedRoles.includes(role)) {
+    throw new Error("Select a valid staff role.");
+  }
+
+  if (role !== "supervisor" && !classId) {
+    throw new Error("Select a course.");
+  }
+
+  if (
+    role === "supervisor" &&
+    !["service_coordinator", "site_supervisor"].includes(supervisorType)
+  ) {
+    throw new Error("Select a supervisor type.");
+  }
+
+  const { data, error } = await supabase.rpc(
+    "appoint_staff_with_class",
+    {
+      p_profile_id: profileId,
+      p_role: role,
+      p_class_id: role === "supervisor" ? null : classId,
+      p_specialization: specialization?.trim() || null,
+      p_biography: biography?.trim() || null,
+      p_supervisor_type:
+        role === "supervisor" ? supervisorType : null,
+    },
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error("The staff assignment could not be saved.");
+  }
+
+  return data;
+}
+
 function cleanOptionalText(value) {
   const cleaned =
     value?.trim();

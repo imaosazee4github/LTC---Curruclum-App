@@ -1,122 +1,57 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useState } from "react";
 
 import CloudinaryUploadButton from "../../components/uploads/CloudinaryUploadButton";
 import { useAuth } from "../../hooks/useAuth";
-import {
-  useStudentProfile,
-} from "../../hooks/useStudentProfile";
+import { useStudentProfile } from "../../hooks/useStudentProfile";
 import StudentLayout from "../../layouts/StudentLayout";
 
-const initialForm = {
-  fullName: "",
-  phone: "",
-  preferredName: "",
-  dateOfBirth: "",
-  gender: "",
-  residentialAddress: "",
-  city: "",
-  state: "",
-  country: "Nigeria",
-  emergencyContactName: "",
-  emergencyContactRelationship: "",
-  emergencyContactPhone: "",
-};
+function getProfileForm(profile, studentProfile) {
+  return {
+    fullName: profile?.full_name || "",
+    phone: profile?.phone || "",
+    preferredName: studentProfile?.preferred_name || "",
+    dateOfBirth: studentProfile?.date_of_birth || "",
+    gender: studentProfile?.gender || "",
+    residentialAddress: studentProfile?.residential_address || "",
+    city: studentProfile?.city || "",
+    state: studentProfile?.state || "",
+    country: studentProfile?.country || "Nigeria",
+    emergencyContactName:
+      studentProfile?.emergency_contact_name || "",
+    emergencyContactRelationship:
+      studentProfile?.emergency_contact_relationship || "",
+    emergencyContactPhone:
+      studentProfile?.emergency_contact_phone || "",
+  };
+}
 
 export default function StudentProfilePage() {
-  const {
-    profile,
-  } = useAuth();
+  const { profile } = useAuth();
 
   const {
     studentProfile,
     studentProfileLoading,
     studentProfileError,
-
     saveStudentProfile,
     savingStudentProfile,
-
     saveProfilePhoto,
     savingProfilePhoto,
-
     studentProfileSaveError,
     profilePhotoError,
   } = useStudentProfile();
 
-  const [form, setForm] =
-    useState(initialForm);
+  const [draft, setDraft] = useState(null);
+  const [formError, setFormError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [photoMessage, setPhotoMessage] = useState("");
 
-  const [formError, setFormError] =
-    useState("");
-
-  const [successMessage, setSuccessMessage] =
-    useState("");
-
-  const [photoMessage, setPhotoMessage] =
-    useState("");
-
-  useEffect(() => {
-    if (!profile || !studentProfile) {
-      return;
-    }
-
-    setForm({
-      fullName:
-        profile.full_name || "",
-
-      phone:
-        profile.phone || "",
-
-      preferredName:
-        studentProfile.preferred_name ||
-        "",
-
-      dateOfBirth:
-        studentProfile.date_of_birth ||
-        "",
-
-      gender:
-        studentProfile.gender || "",
-
-      residentialAddress:
-        studentProfile
-          .residential_address || "",
-
-      city:
-        studentProfile.city || "",
-
-      state:
-        studentProfile.state || "",
-
-      country:
-        studentProfile.country ||
-        "Nigeria",
-
-      emergencyContactName:
-        studentProfile
-          .emergency_contact_name ||
-        "",
-
-      emergencyContactRelationship:
-        studentProfile
-          .emergency_contact_relationship ||
-        "",
-
-      emergencyContactPhone:
-        studentProfile
-          .emergency_contact_phone ||
-        "",
-    });
-  }, [profile, studentProfile]);
+  const form = draft ?? getProfileForm(profile, studentProfile);
 
   function handleChange(event) {
-    const { name, value } =
-      event.target;
+    const { name, value } = event.target;
 
-    setForm((currentForm) => ({
-      ...currentForm,
+    setDraft((currentDraft) => ({
+      ...(currentDraft ?? form),
       [name]: value,
     }));
 
@@ -131,26 +66,17 @@ export default function StudentProfilePage() {
     setSuccessMessage("");
 
     if (!form.fullName.trim()) {
-      setFormError(
-        "Enter your full name.",
-      );
-
+      setFormError("Enter your full name.");
       return;
     }
 
     if (!form.phone.trim()) {
-      setFormError(
-        "Enter your phone number.",
-      );
-
+      setFormError("Enter your phone number.");
       return;
     }
 
     try {
-      const result =
-        await saveStudentProfile(
-          form,
-        );
+      const result = await saveStudentProfile(form);
 
       setSuccessMessage(
         result?.message ||
@@ -158,27 +84,20 @@ export default function StudentProfilePage() {
       );
     } catch (error) {
       setFormError(
-        error.message ||
-          "Unable to update your profile.",
+        error.message || "Unable to update your profile.",
       );
     }
   }
 
-  async function handlePhotoUpload(
-    uploadResult,
-  ) {
+  async function handlePhotoUpload(uploadResult) {
     setPhotoMessage("");
     setFormError("");
 
     try {
-      const result =
-        await saveProfilePhoto({
-          secureUrl:
-            uploadResult.secureUrl,
-
-          publicId:
-            uploadResult.publicId,
-        });
+      const result = await saveProfilePhoto({
+        secureUrl: uploadResult.secureUrl,
+        publicId: uploadResult.publicId,
+      });
 
       setPhotoMessage(
         result?.message ||
@@ -186,8 +105,7 @@ export default function StudentProfilePage() {
       );
     } catch (error) {
       setFormError(
-        error.message ||
-          "Unable to save your profile photo.",
+        error.message || "Unable to save your profile photo.",
       );
     }
   }
@@ -200,10 +118,7 @@ export default function StudentProfilePage() {
     );
   }
 
-  if (
-    studentProfileError ||
-    !studentProfile
-  ) {
+  if (studentProfileError || !studentProfile) {
     return (
       <StudentLayout>
         <PageMessage
@@ -236,10 +151,8 @@ export default function StudentProfilePage() {
             </h1>
 
             <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-              Keep your personal and emergency
-              contact information accurate.
-              Programme assignments are managed
-              by an authorized administrator.
+              Keep your personal and emergency contact information accurate.
+              Programme assignments are managed by an authorized administrator.
             </p>
           </header>
 
@@ -247,8 +160,7 @@ export default function StudentProfilePage() {
             <SummaryCard
               label="Student number"
               value={
-                studentProfile
-                  .student_number ||
+                studentProfile.student_number ||
                 "Pending assignment"
               }
             />
@@ -256,18 +168,14 @@ export default function StudentProfilePage() {
             <SummaryCard
               label="Cohort"
               value={
-                studentProfile.cohort
-                  ?.name ||
+                studentProfile.cohort?.name ||
                 "Pending assignment"
               }
             />
 
             <SummaryCard
               label="Enrollment status"
-              value={formatValue(
-                studentProfile
-                  .enrollment_status,
-              )}
+              value={formatValue(studentProfile.enrollment_status)}
             />
 
             <SummaryCard
@@ -283,28 +191,21 @@ export default function StudentProfilePage() {
               </h2>
 
               <p className="mt-2 text-sm text-slate-600">
-                Upload a clear, recent
-                photograph for your student
-                profile.
+                Upload a clear, recent photograph for your student profile.
               </p>
             </div>
 
             <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
-              <ProfilePicture
-                profile={profile}
-              />
+              <ProfilePicture profile={profile} />
 
               <div>
                 <CloudinaryUploadButton
                   buttonText={
-                    profile
-                      ?.profile_photo_url
+                    profile?.profile_photo_url
                       ? "Change Profile Picture"
                       : "Upload Profile Picture"
                   }
-                  onUploadComplete={
-                    handlePhotoUpload
-                  }
+                  onUploadComplete={handlePhotoUpload}
                 />
 
                 {savingProfilePhoto && (
@@ -323,9 +224,7 @@ export default function StudentProfilePage() {
                 )}
 
                 <p className="mt-3 text-xs leading-5 text-slate-500">
-                  Accepted formats: JPG, PNG
-                  and WebP. Maximum file size:
-                  5 MB.
+                  Accepted formats: JPG, PNG and WebP. Maximum file size: 5 MB.
                 </p>
               </div>
             </div>
@@ -338,31 +237,17 @@ export default function StudentProfilePage() {
               </h2>
 
               <p className="mt-2 text-sm text-slate-600">
-                Fields marked as required
-                contribute to your profile
-                completion.
+                Fields marked as required contribute to your profile completion.
               </p>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="p-6"
-            >
+            <form onSubmit={handleSubmit} className="p-6">
               {displayedError && (
-                <Message
-                  error
-                  message={
-                    displayedError
-                  }
-                />
+                <Message error message={displayedError} />
               )}
 
               {successMessage && (
-                <Message
-                  message={
-                    successMessage
-                  }
-                />
+                <Message message={successMessage} />
               )}
 
               <div className="grid gap-6 md:grid-cols-2">
@@ -378,9 +263,7 @@ export default function StudentProfilePage() {
                 <FormField
                   label="Preferred name"
                   name="preferredName"
-                  value={
-                    form.preferredName
-                  }
+                  value={form.preferredName}
                   onChange={handleChange}
                   autoComplete="nickname"
                 />
@@ -414,8 +297,7 @@ export default function StudentProfilePage() {
                   options={[
                     {
                       value: "",
-                      label:
-                        "Select gender",
+                      label: "Select gender",
                     },
                     {
                       value: "male",
@@ -424,7 +306,7 @@ export default function StudentProfilePage() {
                     {
                       value: "female",
                       label: "Female",
-                    }
+                    },
                   ]}
                 />
 
@@ -459,9 +341,7 @@ export default function StudentProfilePage() {
                   <TextAreaField
                     label="Residential address"
                     name="residentialAddress"
-                    value={
-                      form.residentialAddress
-                    }
+                    value={form.residentialAddress}
                     onChange={handleChange}
                     required
                   />
@@ -476,8 +356,7 @@ export default function StudentProfilePage() {
                 </h3>
 
                 <p className="mt-2 text-sm text-slate-600">
-                  Provide someone LTC may
-                  contact in an emergency.
+                  Provide someone LTC may contact in an emergency.
                 </p>
               </div>
 
@@ -485,9 +364,7 @@ export default function StudentProfilePage() {
                 <FormField
                   label="Contact full name"
                   name="emergencyContactName"
-                  value={
-                    form.emergencyContactName
-                  }
+                  value={form.emergencyContactName}
                   onChange={handleChange}
                   required
                 />
@@ -495,10 +372,7 @@ export default function StudentProfilePage() {
                 <FormField
                   label="Relationship"
                   name="emergencyContactRelationship"
-                  value={
-                    form
-                      .emergencyContactRelationship
-                  }
+                  value={form.emergencyContactRelationship}
                   onChange={handleChange}
                   required
                 />
@@ -507,9 +381,7 @@ export default function StudentProfilePage() {
                   label="Contact phone number"
                   name="emergencyContactPhone"
                   type="tel"
-                  value={
-                    form.emergencyContactPhone
-                  }
+                  value={form.emergencyContactPhone}
                   onChange={handleChange}
                   autoComplete="tel"
                   required
@@ -520,19 +392,13 @@ export default function StudentProfilePage() {
                 <p className="text-sm text-slate-500">
                   Current completion:{" "}
                   <span className="font-semibold text-blue-950">
-                    {
-                      studentProfile
-                        .profile_completion_percentage
-                    }
-                    %
+                    {studentProfile.profile_completion_percentage}%
                   </span>
                 </p>
 
                 <button
                   type="submit"
-                  disabled={
-                    savingStudentProfile
-                  }
+                  disabled={savingStudentProfile}
                   className="rounded-lg bg-blue-950 px-6 py-3 font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {savingStudentProfile
@@ -566,19 +432,12 @@ function ProfilePicture({ profile }) {
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-}) {
+function SummaryCard({ label, value }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm text-slate-500">
-        {label}
-      </p>
+      <p className="text-sm text-slate-500">{label}</p>
 
-      <p className="mt-2 font-bold text-blue-950">
-        {value}
-      </p>
+      <p className="mt-2 font-bold text-blue-950">{value}</p>
     </article>
   );
 }
@@ -599,11 +458,8 @@ function FormField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
-
         {required && (
-          <span className="ml-1 text-red-600">
-            *
-          </span>
+          <span className="ml-1 text-red-600">*</span>
         )}
       </label>
 
@@ -636,11 +492,8 @@ function SelectField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
-
         {required && (
-          <span className="ml-1 text-red-600">
-            *
-          </span>
+          <span className="ml-1 text-red-600">*</span>
         )}
       </label>
 
@@ -653,10 +506,7 @@ function SelectField({
         className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-100"
       >
         {options.map((option) => (
-          <option
-            key={option.value}
-            value={option.value}
-          >
+          <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}
@@ -679,11 +529,8 @@ function TextAreaField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
-
         {required && (
-          <span className="ml-1 text-red-600">
-            *
-          </span>
+          <span className="ml-1 text-red-600">*</span>
         )}
       </label>
 
@@ -700,10 +547,7 @@ function TextAreaField({
   );
 }
 
-function Message({
-  message,
-  error = false,
-}) {
+function Message({ message, error = false }) {
   return (
     <div
       role={error ? "alert" : "status"}
@@ -718,10 +562,7 @@ function Message({
   );
 }
 
-function PageMessage({
-  message,
-  error = false,
-}) {
+function PageMessage({ message, error = false }) {
   return (
     <main className="p-5 md:p-8">
       <div
@@ -745,11 +586,7 @@ function formatValue(value) {
 
   return String(value)
     .split("_")
-    .map(
-      (word) =>
-        word.charAt(0).toUpperCase() +
-        word.slice(1),
-    )
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
 
@@ -762,8 +599,6 @@ function getInitials(fullName) {
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((name) =>
-      name.charAt(0).toUpperCase(),
-    )
+    .map((name) => name.charAt(0).toUpperCase())
     .join("");
 }

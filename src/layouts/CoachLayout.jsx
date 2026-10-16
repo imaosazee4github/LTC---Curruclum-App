@@ -24,7 +24,7 @@ const navigation = [
     available: true,
   },
   {
-    label: "My Coaching Assignments",
+    label: "My Students",
     path: "/coach/assignments",
     icon: BookOpen,
     available: true,

@@ -55,23 +55,28 @@ export async function registerStudent({
   fullName,
   email,
   password,
+  requestedRoles = ["student"],
 }) {
-  const cleanFullName =
-    fullName?.trim();
+  const cleanFullName = fullName?.trim();
+  const cleanEmail = email?.trim().toLowerCase();
 
-  const cleanEmail =
-    email?.trim().toLowerCase();
+  const allowedRoles = [
+    "student",
+    "instructor",
+    "facilitator",
+    "coach",
+    "project_coordinator",
+    "site_supervisor",
+    "mentor",
+    "mentor_department",
+  ];
 
   if (!cleanFullName) {
-    throw new Error(
-      "Enter your full name.",
-    );
+    throw new Error("Enter your full name.");
   }
 
   if (!cleanEmail) {
-    throw new Error(
-      "Enter your email address.",
-    );
+    throw new Error("Enter your email address.");
   }
 
   if (!password || password.length < 8) {
@@ -80,20 +85,29 @@ export async function registerStudent({
     );
   }
 
-  const { data, error } =
-    await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
+  if (
+    !Array.isArray(requestedRoles) ||
+    requestedRoles.length === 0
+  ) {
+    throw new Error("Select at least one role.");
+  }
 
-      options: {
-        data: {
-          full_name: cleanFullName,
-        },
+  const roles = [...new Set(requestedRoles)];
 
-        emailRedirectTo:
-          `${window.location.origin}/auth/callback`,
+  if (roles.some((role) => !allowedRoles.includes(role))) {
+    throw new Error("Select valid registration roles.");
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email: cleanEmail,
+    password,
+    options: {
+      data: {
+        full_name: cleanFullName,
+        requested_roles: roles,
       },
-    });
+    },
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -101,6 +115,8 @@ export async function registerStudent({
 
   return data;
 }
+
+
 
 export async function signIn({
   email,
@@ -234,4 +250,28 @@ function getFriendlyAuthError(message) {
     message ||
     "Unable to sign in. Please try again."
   );
+}
+
+
+export async function getMyAccessRoles() {
+  const { data, error } = await supabase.rpc(
+    "get_my_access_roles",
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success || !Array.isArray(data.roles)) {
+    throw new Error(
+      "Your account roles could not be loaded.",
+    );
+  }
+
+  return {
+    primaryRole: data.primaryRole || null,
+    roles: [...new Set(data.roles)].filter(
+      (role) => typeof role === "string" && role.length > 0,
+    ),
+  };
 }
