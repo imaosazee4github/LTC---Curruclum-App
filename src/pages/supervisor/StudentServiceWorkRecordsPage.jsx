@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   CheckCircle2,
   ClipboardCheck,
@@ -6,15 +7,7 @@ import {
   Users,
 } from "lucide-react";
 
-import {
-  useMemo,
-  useState,
-} from "react";
-
-import {
-  useSiteSupervisorWork,
-} from "../../hooks/useSiteSupervisorWork";
-
+import { useSiteSupervisorWork } from "../../hooks/useSiteSupervisorWork";
 import SupervisorLayout from "../../layouts/SupervisorLayout";
 
 const initialForm = {
@@ -25,37 +18,40 @@ const initialForm = {
   reliability: "not_observed",
   safety: "not_observed",
   followThrough: "not_observed",
-  responseToFeedback:
-    "not_observed",
+  responseToFeedback: "not_observed",
   independence: "not_observed",
   supportRequired: "",
   supervisorRemarks: "",
-  increasingResponsibility:
-    false,
-  recommendedResponsibilityLevel:
-    "",
+  increasingResponsibility: false,
+  recommendedResponsibilityLevel: "",
 };
 
 const ratingOptions = [
+  { value: "not_observed", label: "Not Observed" },
+  { value: "needs_improvement", label: "Needs Improvement" },
+  { value: "developing", label: "Developing" },
+  { value: "meets_expectations", label: "Meets Expectations" },
+  { value: "exceeds_expectations", label: "Exceeds Expectations" },
+];
+
+const ratingFields = [
+  { name: "quality", key: "quality", label: "Quality" },
+  { name: "reliability", key: "reliability", label: "Reliability" },
+  { name: "safety", key: "safety", label: "Safety" },
   {
-    value: "not_observed",
-    label: "Not Observed",
+    name: "followThrough",
+    key: "follow_through",
+    label: "Follow-Through",
   },
   {
-    value: "needs_improvement",
-    label: "Needs Improvement",
+    name: "responseToFeedback",
+    key: "response_to_feedback",
+    label: "Response to Instruction/Feedback",
   },
   {
-    value: "developing",
-    label: "Developing",
-  },
-  {
-    value: "meets_expectations",
-    label: "Meets Expectations",
-  },
-  {
-    value: "exceeds_expectations",
-    label: "Exceeds Expectations",
+    name: "independence",
+    key: "independence",
+    label: "Independence",
   },
 ];
 
@@ -73,172 +69,136 @@ export default function StudentServiceWorkRecordsPage() {
     resetWorkReport,
   } = useSiteSupervisorWork();
 
-  const [form, setForm] =
-    useState(initialForm);
+  const [date, setDate] = useState(getTodayInNigeria);
+  const [projectId, setProjectId] = useState("");
+  const [form, setForm] = useState(initialForm);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [localError, setLocalError] = useState("");
 
-  const [
-    successMessage,
-    setSuccessMessage,
-  ] = useState("");
+  const dailyAssignments = siteWorkAssignments.filter(
+    (assignment) =>
+      assignment.assignment_status !== "removed" &&
+      assignment.schedule?.status !== "cancelled" &&
+      assignment.project?.status !== "cancelled" &&
+      assignment.schedule?.schedule_date === date,
+  );
 
-  const [
-    localError,
-    setLocalError,
-  ] = useState("");
+  const projects = groupByProject(dailyAssignments);
 
-  const assignments =
-    useMemo(
-      () =>
-        siteWorkAssignments.filter(
-          (assignment) =>
-            assignment
-              .assignment_status !==
-            "removed",
-        ),
-      [siteWorkAssignments],
-    );
+  const assignments = dailyAssignments.filter(
+    (assignment) =>
+      !projectId || assignment.project?.project_id === projectId,
+  );
 
-  function selectAssignment(
-    assignmentId,
-  ) {
-    const selectedAssignment =
-      assignments.find(
-        (assignment) =>
-          assignment
-            .assignment_id ===
-          assignmentId,
-      );
+  const groups = groupByProject(assignments);
 
-    const workRecord =
-      selectedAssignment
-        ?.work_record;
+  const studentCount = new Set(
+    assignments.map(
+      (assignment) =>
+        assignment.student?.student_profile_id ||
+        assignment.student?.profile_id ||
+        assignment.assignment_id,
+    ),
+  ).size;
 
-    setForm({
-      studentAssignmentId:
-        assignmentId,
+  const recordedCount = assignments.filter(
+    (assignment) => Boolean(assignment.work_record),
+  ).length;
 
-      workPerformed:
-        workRecord
-          ?.work_performed ||
-        "",
+  const selectedAssignment = assignments.find(
+    (assignment) =>
+      assignment.assignment_id === form.studentAssignmentId,
+  );
 
-      outcome:
-        workRecord?.outcome ||
-        "",
-
-      quality:
-        workRecord?.quality ||
-        "not_observed",
-
-      reliability:
-        workRecord?.reliability ||
-        "not_observed",
-
-      safety:
-        workRecord?.safety ||
-        "not_observed",
-
-      followThrough:
-        workRecord
-          ?.follow_through ||
-        "not_observed",
-
-      responseToFeedback:
-        workRecord
-          ?.response_to_feedback ||
-        "not_observed",
-
-      independence:
-        workRecord
-          ?.independence ||
-        "not_observed",
-
-      supportRequired:
-        workRecord
-          ?.support_required ||
-        "",
-
-      supervisorRemarks:
-        workRecord
-          ?.supervisor_remarks ||
-        "",
-
-      increasingResponsibility:
-        Boolean(
-          workRecord
-            ?.increasing_responsibility,
-        ),
-
-      recommendedResponsibilityLevel:
-        workRecord
-          ?.recommended_responsibility_level ||
-        "",
-    });
-
+  function clearMessages() {
     setLocalError("");
     setSuccessMessage("");
     resetWorkReport();
   }
 
-  function handleChange(event) {
-    const {
-      name,
-      value,
-      type,
-      checked,
-    } = event.target;
+  function changeFilters(nextDate, nextProjectId) {
+    if (savingWorkReport) return;
 
-    if (
-      name ===
-      "studentAssignmentId"
-    ) {
+    setDate(nextDate);
+    setProjectId(nextProjectId);
+    setForm(initialForm);
+    clearMessages();
+  }
+
+  function selectAssignment(assignmentId) {
+    if (savingWorkReport) return;
+
+    const assignment = assignments.find(
+      (item) => item.assignment_id === assignmentId,
+    );
+
+    const record = assignment?.work_record;
+
+    setForm({
+      studentAssignmentId: assignment?.assignment_id || "",
+      workPerformed: record?.work_performed || "",
+      outcome: record?.outcome || "",
+      quality: record?.quality || "not_observed",
+      reliability: record?.reliability || "not_observed",
+      safety: record?.safety || "not_observed",
+      followThrough: record?.follow_through || "not_observed",
+      responseToFeedback:
+        record?.response_to_feedback || "not_observed",
+      independence: record?.independence || "not_observed",
+      supportRequired: record?.support_required || "",
+      supervisorRemarks: record?.supervisor_remarks || "",
+      increasingResponsibility: Boolean(
+        record?.increasing_responsibility,
+      ),
+      recommendedResponsibilityLevel:
+        record?.recommended_responsibility_level || "",
+    });
+
+    clearMessages();
+  }
+
+  function handleChange(event) {
+    const { name, value, type, checked } = event.target;
+
+    if (name === "studentAssignmentId") {
       selectAssignment(value);
       return;
     }
 
     setForm((current) => ({
       ...current,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
 
-    setLocalError("");
-    setSuccessMessage("");
-    resetWorkReport();
+    clearMessages();
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
-    setLocalError("");
-    setSuccessMessage("");
-    resetWorkReport();
+    if (savingWorkReport) return;
 
-    if (
-      !form.studentAssignmentId
-    ) {
+    clearMessages();
+
+    if (!form.studentAssignmentId) {
+      setLocalError("Select a student assignment.");
+      return;
+    }
+
+    if (!selectedAssignment) {
       setLocalError(
-        "Select a student assignment.",
+        "This assignment is no longer in the selected view. Select a student again.",
       );
       return;
     }
 
-    if (
-      !form.workPerformed.trim()
-    ) {
-      setLocalError(
-        "Enter the work performed by the student.",
-      );
+    if (!form.workPerformed.trim()) {
+      setLocalError("Enter the work performed by the student.");
       return;
     }
 
     try {
-      const result =
-        await saveWorkReport(
-          form,
-        );
+      const result = await saveWorkReport(form);
 
       setSuccessMessage(
         result?.message ||
@@ -246,30 +206,22 @@ export default function StudentServiceWorkRecordsPage() {
       );
     } catch (error) {
       setLocalError(
-        error.message ||
-          "The student work report could not be saved.",
+        error.message || "The student work report could not be saved.",
       );
     }
   }
 
   if (siteWorkLoading) {
     return (
-      <SupervisorLayout
-        supervisorType="site_supervisor"
-      >
+      <SupervisorLayout supervisorType="site_supervisor">
         <PageMessage message="Loading student work records..." />
       </SupervisorLayout>
     );
   }
 
-  if (
-    siteWorkError ||
-    !siteWorkSummary
-  ) {
+  if (siteWorkError || !siteWorkSummary) {
     return (
-      <SupervisorLayout
-        supervisorType="site_supervisor"
-      >
+      <SupervisorLayout supervisorType="site_supervisor">
         <PageMessage
           error
           message={
@@ -282,12 +234,10 @@ export default function StudentServiceWorkRecordsPage() {
   }
 
   return (
-    <SupervisorLayout
-      supervisorType="site_supervisor"
-    >
+    <SupervisorLayout supervisorType="site_supervisor">
       <main className="p-5 md:p-8">
         <div className="mx-auto max-w-7xl">
-          <header className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <header className="flex flex-wrap items-start justify-between gap-5">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
                 Site Supervision
@@ -298,114 +248,365 @@ export default function StudentServiceWorkRecordsPage() {
               </h1>
 
               <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-                Record work completed,
-                outcomes, performance,
-                support needs and readiness
-                for increased
-                responsibility.
+                Record work completed, outcomes, performance, support
+                needs and readiness for increased responsibility.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                refreshSiteWork()
-              }
-              disabled={
-                siteWorkFetching
-              }
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-blue-950 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => refreshSiteWork()}
+              disabled={siteWorkFetching || savingWorkReport}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-blue-950 disabled:opacity-60"
             >
               <RefreshCw
+                aria-hidden="true"
                 className={`h-4 w-4 ${
-                  siteWorkFetching
-                    ? "animate-spin"
-                    : ""
+                  siteWorkFetching ? "animate-spin" : ""
                 }`}
               />
-
               Refresh
             </button>
           </header>
 
-          <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section
+            aria-label="Work report filters"
+            className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <div className="grid items-end gap-4 md:grid-cols-[1fr_2fr_auto]">
+              <label className="block">
+                <span className="text-sm font-semibold text-slate-700">
+                  Reporting date (Nigeria)
+                </span>
+
+                <input
+                  type="date"
+                  value={date}
+                  disabled={savingWorkReport}
+                  required
+                  onChange={(event) => {
+                    if (event.target.value) {
+                      changeFilters(event.target.value, "");
+                    }
+                  }}
+                  className="mt-2 block w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
+                />
+              </label>
+
+              <SelectField
+                label="Project"
+                value={projectId}
+                disabled={savingWorkReport}
+                onChange={(event) =>
+                  changeFilters(date, event.target.value)
+                }
+              >
+                <option value="">All projects for this date</option>
+
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.title}
+                  </option>
+                ))}
+              </SelectField>
+
+              <button
+                type="button"
+                disabled={savingWorkReport}
+                onClick={() =>
+                  changeFilters(getTodayInNigeria(), "")
+                }
+                className="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 disabled:opacity-60"
+              >
+                Today
+              </button>
+            </div>
+
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              Counts and student lists follow the selected date and
+              project. Changing a filter clears the current form.
+              Each report belongs to one student activity.
+            </p>
+          </section>
+
+          <section
+            aria-label="Selected work report summary"
+            className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          >
             <SummaryCard
-              label="Assigned Students"
-              value={
-                siteWorkSummary
-                  .assignedStudents
-              }
+              label="Students in Selected View"
+              value={studentCount}
               icon={Users}
               tone="blue"
             />
 
             <SummaryCard
               label="Reports Pending"
-              value={
-                siteWorkSummary
-                  .workReportsPending
-              }
+              value={assignments.length - recordedCount}
               icon={ClipboardCheck}
               tone="amber"
             />
 
             <SummaryCard
               label="Reports Recorded"
-              value={
-                siteWorkSummary
-                  .workReportsRecorded
-              }
+              value={recordedCount}
               icon={CheckCircle2}
               tone="green"
             />
 
             <SummaryCard
-              label="Today's Assignments"
-              value={
-                siteWorkSummary
-                  .todaysAssignments
-              }
+              label="Activity Assignments"
+              value={assignments.length}
               icon={TrendingUp}
               tone="purple"
             />
           </section>
 
-          {successMessage ? (
-            <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800">
+          {successMessage && (
+            <div
+              role="status"
+              className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800"
+            >
               {successMessage}
             </div>
-          ) : null}
+          )}
 
-          <div className="mt-8 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-            <WorkRecordForm
-              form={form}
-              assignments={
-                assignments
-              }
-              onChange={
-                handleChange
-              }
-              onSubmit={
-                handleSubmit
-              }
-              submitting={
-                savingWorkReport
-              }
-              error={
-                localError ||
-                workReportError
-                  ?.message
-              }
-            />
+          <div className="mt-8 grid items-start gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <fieldset
+                disabled={savingWorkReport}
+                className="min-w-0 border-0 p-0"
+              >
+                <h2 className="text-xl font-bold text-slate-950">
+                  Record Student Work
+                </h2>
 
-            <WorkRecordDirectory
-              assignments={
-                assignments
-              }
-              onSelect={
-                selectAssignment
-              }
-            />
+                <p className="mt-2 text-sm text-slate-500">
+                  Document performance and development during service.
+                </p>
+
+                <div className="mt-6 space-y-5">
+                  <SelectField
+                    label="Student Assignment"
+                    name="studentAssignmentId"
+                    value={form.studentAssignmentId}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select a student activity</option>
+
+                    {groups.map((group) => (
+                      <optgroup key={group.id} label={group.title}>
+                        {group.assignments.map((assignment) => (
+                          <option
+                            key={assignment.assignment_id}
+                            value={assignment.assignment_id}
+                          >
+                            {getAssignmentLabel(assignment)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </SelectField>
+
+                  {selectedAssignment && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <p className="font-semibold text-blue-950">
+                        {selectedAssignment.project?.title ||
+                          "Service Project"}
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-blue-900">
+                        Assigned task:{" "}
+                        {selectedAssignment.assigned_task ||
+                          selectedAssignment.schedule?.task_title ||
+                          "Not specified"}
+                      </p>
+
+                      <p className="mt-2 text-xs text-blue-800">
+                        Team:{" "}
+                        {selectedAssignment.team_name || "Not specified"}
+                        {" · "}
+                        Responsibility:{" "}
+                        {formatLabel(
+                          selectedAssignment.responsibility_level,
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  <TextAreaField
+                    label="Work Performed"
+                    name="workPerformed"
+                    value={form.workPerformed}
+                    onChange={handleChange}
+                    placeholder="Describe the work completed by the student."
+                    required
+                  />
+
+                  <TextAreaField
+                    label="Outcome"
+                    name="outcome"
+                    value={form.outcome}
+                    onChange={handleChange}
+                    placeholder="Describe the result or outcome of the work."
+                  />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {ratingFields.map((field) => (
+                      <SelectField
+                        key={field.name}
+                        label={field.label}
+                        name={field.name}
+                        value={form[field.name]}
+                        onChange={handleChange}
+                        required
+                      >
+                        {ratingOptions.map((option) => (
+                          <option
+                            key={option.value}
+                            value={option.value}
+                          >
+                            {option.label}
+                          </option>
+                        ))}
+                      </SelectField>
+                    ))}
+                  </div>
+
+                  <TextAreaField
+                    label="Support Required"
+                    name="supportRequired"
+                    value={form.supportRequired}
+                    onChange={handleChange}
+                    placeholder="Describe support, coaching or follow-up required."
+                  />
+
+                  <TextAreaField
+                    label="Supervisor Remarks"
+                    name="supervisorRemarks"
+                    value={form.supervisorRemarks}
+                    onChange={handleChange}
+                    placeholder="Add observations and remarks about the student."
+                  />
+
+                  <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <input
+                      type="checkbox"
+                      name="increasingResponsibility"
+                      checked={form.increasingResponsibility}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-700"
+                    />
+
+                    <span>
+                      <span className="block font-semibold text-slate-800">
+                        Increasing Responsibility
+                      </span>
+
+                      <span className="mt-1 block text-sm text-slate-500">
+                        The student is ready for greater responsibility.
+                      </span>
+                    </span>
+                  </label>
+
+                  <SelectField
+                    label="Recommended Responsibility Level"
+                    name="recommendedResponsibilityLevel"
+                    value={form.recommendedResponsibilityLevel}
+                    onChange={handleChange}
+                  >
+                    <option value="">No recommendation</option>
+                    <option value="guided">Guided</option>
+                    <option value="supported">Supported</option>
+                    <option value="independent">Independent</option>
+                    <option value="team_lead">Team Lead</option>
+                  </SelectField>
+                </div>
+
+                {(localError || workReportError?.message) && (
+                  <div
+                    role="alert"
+                    className="mt-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                  >
+                    {localError || workReportError?.message}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={
+                    savingWorkReport ||
+                    !form.studentAssignmentId ||
+                    assignments.length === 0
+                  }
+                  className="mt-6 w-full rounded-lg bg-blue-950 px-4 py-3 font-semibold text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {savingWorkReport
+                    ? "Saving Work Report..."
+                    : "Save Work Report"}
+                </button>
+              </fieldset>
+            </form>
+
+            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <header className="border-b border-slate-200 p-5">
+                <h2 className="text-xl font-bold text-slate-950">
+                  Work Report Status
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-600">
+                  {formatDate(date)} · Grouped by project
+                </p>
+              </header>
+
+              {groups.length > 0 ? (
+                groups.map((group) => (
+                  <section key={group.id}>
+                    <header className="border-y border-slate-200 bg-blue-50 px-5 py-4">
+                      <h3 className="font-bold text-blue-950">
+                        {group.title}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-slate-600">
+                        {group.assignments.length} student activity
+                        assignments
+                      </p>
+                    </header>
+
+                    <div className="divide-y divide-slate-200">
+                      {group.assignments.map((assignment) => (
+                        <WorkRecordCard
+                          key={assignment.assignment_id}
+                          assignment={assignment}
+                          onSelect={selectAssignment}
+                          disabled={savingWorkReport}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))
+              ) : (
+                <div className="p-10 text-center">
+                  <Users
+                    aria-hidden="true"
+                    className="mx-auto h-10 w-10 text-slate-300"
+                  />
+
+                  <h3 className="mt-4 font-bold text-slate-900">
+                    No assignments for this selection
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Choose another date or project, or ask the Service
+                    Coordinator to assign students.
+                  </p>
+                </div>
+              )}
+            </section>
           </div>
         </div>
       </main>
@@ -413,333 +614,43 @@ export default function StudentServiceWorkRecordsPage() {
   );
 }
 
-function WorkRecordForm({
-  form,
-  assignments,
-  onChange,
-  onSubmit,
-  submitting,
-  error,
-}) {
-  return (
-    <form
-      onSubmit={onSubmit}
-      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-    >
-      <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-blue-100 p-3 text-blue-700">
-          <ClipboardCheck className="h-5 w-5" />
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-slate-950">
-            Record Student Work
-          </h2>
-
-          <p className="text-sm text-slate-500">
-            Document performance and
-            development during service.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-6 space-y-5">
-        <SelectField
-          label="Student Assignment"
-          name="studentAssignmentId"
-          value={
-            form.studentAssignmentId
-          }
-          onChange={onChange}
-          required
-        >
-          <option value="">
-            Select a student
-          </option>
-
-          {assignments.map(
-            (assignment) => (
-              <option
-                key={
-                  assignment
-                    .assignment_id
-                }
-                value={
-                  assignment
-                    .assignment_id
-                }
-              >
-                {getAssignmentLabel(
-                  assignment,
-                )}
-              </option>
-            ),
-          )}
-        </SelectField>
-
-        <TextAreaField
-          label="Work Performed"
-          name="workPerformed"
-          value={
-            form.workPerformed
-          }
-          onChange={onChange}
-          placeholder="Describe the work completed by the student."
-          required
-        />
-
-        <TextAreaField
-          label="Outcome"
-          name="outcome"
-          value={form.outcome}
-          onChange={onChange}
-          placeholder="Describe the result or outcome of the work."
-        />
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <RatingField
-            label="Quality"
-            name="quality"
-            value={form.quality}
-            onChange={onChange}
-          />
-
-          <RatingField
-            label="Reliability"
-            name="reliability"
-            value={
-              form.reliability
-            }
-            onChange={onChange}
-          />
-
-          <RatingField
-            label="Safety"
-            name="safety"
-            value={form.safety}
-            onChange={onChange}
-          />
-
-          <RatingField
-            label="Follow-Through"
-            name="followThrough"
-            value={
-              form.followThrough
-            }
-            onChange={onChange}
-          />
-
-          <RatingField
-            label="Response to Instruction/Feedback"
-            name="responseToFeedback"
-            value={
-              form.responseToFeedback
-            }
-            onChange={onChange}
-          />
-
-          <RatingField
-            label="Independence"
-            name="independence"
-            value={
-              form.independence
-            }
-            onChange={onChange}
-          />
-        </div>
-
-        <TextAreaField
-          label="Support Required"
-          name="supportRequired"
-          value={
-            form.supportRequired
-          }
-          onChange={onChange}
-          placeholder="Describe any support, coaching or follow-up required."
-        />
-
-        <TextAreaField
-          label="Supervisor Remarks"
-          name="supervisorRemarks"
-          value={
-            form.supervisorRemarks
-          }
-          onChange={onChange}
-          placeholder="Add observations and remarks about the student."
-        />
-
-        <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <input
-            type="checkbox"
-            name="increasingResponsibility"
-            checked={
-              form.increasingResponsibility
-            }
-            onChange={onChange}
-            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-700"
-          />
-
-          <span>
-            <span className="block font-semibold text-slate-800">
-              Increasing Responsibility
-            </span>
-
-            <span className="mt-1 block text-sm text-slate-500">
-              The student is ready for
-              greater responsibility.
-            </span>
-          </span>
-        </label>
-
-        <SelectField
-          label="Recommended Responsibility Level"
-          name="recommendedResponsibilityLevel"
-          value={
-            form.recommendedResponsibilityLevel
-          }
-          onChange={onChange}
-        >
-          <option value="">
-            No recommendation
-          </option>
-
-          <option value="guided">
-            Guided
-          </option>
-
-          <option value="supported">
-            Supported
-          </option>
-
-          <option value="independent">
-            Independent
-          </option>
-
-          <option value="team_lead">
-            Team Lead
-          </option>
-        </SelectField>
-      </div>
-
-      {error ? (
-        <ErrorMessage
-          message={error}
-        />
-      ) : null}
-
-      <button
-        type="submit"
-        disabled={
-          submitting ||
-          assignments.length === 0
-        }
-        className="mt-6 w-full rounded-lg bg-blue-950 px-4 py-3 font-semibold text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {submitting
-          ? "Saving Work Report..."
-          : "Save Work Report"}
-      </button>
-    </form>
-  );
-}
-
-function WorkRecordDirectory({
-  assignments,
-  onSelect,
-}) {
-  return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-5 py-5">
-        <h2 className="text-xl font-bold text-slate-950">
-          Work Report Status
-        </h2>
-
-        <p className="mt-1 text-sm text-slate-600">
-          Select a student to create or
-          update their work report.
-        </p>
-      </div>
-
-      {assignments.length > 0 ? (
-        <div className="divide-y divide-slate-200">
-          {assignments.map(
-            (assignment) => (
-              <WorkRecordCard
-                key={
-                  assignment
-                    .assignment_id
-                }
-                assignment={
-                  assignment
-                }
-                onSelect={
-                  onSelect
-                }
-              />
-            ),
-          )}
-        </div>
-      ) : (
-        <div className="p-10 text-center">
-          <Users className="mx-auto h-10 w-10 text-slate-300" />
-
-          <h3 className="mt-4 font-bold text-slate-900">
-            No student assignments
-          </h3>
-
-          <p className="mt-2 text-sm text-slate-500">
-            Student assignments will
-            appear here when created by
-            the Service Coordinator.
-          </p>
-        </div>
-      )}
-    </section>
-  );
-}
-
-function WorkRecordCard({
-  assignment,
-  onSelect,
-}) {
-  const student =
-    assignment.student || {};
-
-  const project =
-    assignment.project || {};
-
-  const schedule =
-    assignment.schedule || {};
-
-  const workRecord =
-    assignment.work_record;
+function WorkRecordCard({ assignment, onSelect, disabled }) {
+  const student = assignment.student || {};
+  const schedule = assignment.schedule || {};
+  const record = assignment.work_record;
 
   return (
     <article className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h3 className="font-bold text-slate-950">
-            {student.full_name ||
-              student.email ||
-              "Student"}
-          </h3>
+          <h4 className="font-bold text-slate-950">
+            {student.full_name || student.email || "Student"}
+          </h4>
 
-          <p className="mt-1 text-sm font-semibold text-blue-700">
-            {project.title ||
-              "Service Project"}
+          {student.student_number && (
+            <p className="mt-1 text-xs text-slate-500">
+              {student.student_number}
+            </p>
+          )}
+
+          <p className="mt-2 text-sm font-semibold text-blue-700">
+            {schedule.task_title || "Scheduled Activity"}
           </p>
 
-          <p className="mt-1 text-sm text-slate-600">
-            {schedule.task_title ||
-              "Scheduled Activity"}
+          <p className="mt-1 text-sm text-slate-500">
+            {formatDate(schedule.schedule_date)}
           </p>
         </div>
 
-        <ReportBadge
-          recorded={
-            Boolean(workRecord)
-          }
-        />
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
+            record
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-amber-100 text-amber-700"
+          }`}
+        >
+          {record ? "Recorded" : "Pending"}
+        </span>
       </div>
 
       <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm">
@@ -747,94 +658,82 @@ function WorkRecordCard({
           Assigned Task
         </p>
 
-        <p className="mt-1 text-slate-600">
-          {assignment.assigned_task ||
-            "No specific task entered"}
+        <p className="mt-1 whitespace-pre-wrap text-slate-600">
+          {assignment.assigned_task || "No specific task entered"}
         </p>
       </div>
 
-      {workRecord ? (
-        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-          <Detail
-            label="Quality"
-            value={formatLabel(
-              workRecord.quality,
-            )}
-          />
+      {record && (
+        <>
+          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            {ratingFields.map((field) => (
+              <Detail
+                key={field.key}
+                label={field.label}
+                value={formatLabel(record[field.key])}
+              />
+            ))}
+          </dl>
 
-          <Detail
-            label="Reliability"
-            value={formatLabel(
-              workRecord.reliability,
-            )}
-          />
+          <details className="mt-4 rounded-lg border border-slate-200">
+            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-blue-950">
+              View report details
+            </summary>
 
-          <Detail
-            label="Safety"
-            value={formatLabel(
-              workRecord.safety,
-            )}
-          />
+            <dl className="space-y-3 border-t border-slate-200 p-4 text-sm">
+              <Detail
+                label="Work Performed"
+                value={record.work_performed || "Not recorded"}
+              />
 
-          <Detail
-            label="Independence"
-            value={formatLabel(
-              workRecord.independence,
-            )}
-          />
-        </dl>
-      ) : null}
+              <Detail
+                label="Outcome"
+                value={record.outcome || "Not recorded"}
+              />
+
+              <Detail
+                label="Support Required"
+                value={record.support_required || "Not recorded"}
+              />
+
+              <Detail
+                label="Supervisor Remarks"
+                value={record.supervisor_remarks || "Not recorded"}
+              />
+
+              <Detail
+                label="Increasing Responsibility"
+                value={record.increasing_responsibility ? "Yes" : "No"}
+              />
+
+              <Detail
+                label="Recommended Level"
+                value={
+                  record.recommended_responsibility_level
+                    ? formatLabel(
+                        record.recommended_responsibility_level,
+                      )
+                    : "No recommendation"
+                }
+              />
+            </dl>
+          </details>
+        </>
+      )}
 
       <button
         type="button"
-        onClick={() =>
-          onSelect(
-            assignment
-              .assignment_id,
-          )
-        }
-        className="mt-4 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-50"
+        disabled={disabled}
+        onClick={() => onSelect(assignment.assignment_id)}
+        className="mt-4 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 disabled:opacity-60"
       >
-        {workRecord
-          ? "Edit Work Report"
-          : "Record Work Report"}
+        {record ? "Edit Work Report" : "Record Work Report"}
       </button>
     </article>
   );
 }
 
-function RatingField({
-  label,
-  name,
-  value,
-  onChange,
-}) {
-  return (
-    <SelectField
-      label={label}
-      name={name}
-      value={value}
-      onChange={onChange}
-      required
-    >
-      {ratingOptions.map(
-        (option) => (
-          <option
-            key={option.value}
-            value={option.value}
-          >
-            {option.label}
-          </option>
-        ),
-      )}
-    </SelectField>
-  );
-}
-
-function TextAreaField({
-  label,
-  ...props
-}) {
+function TextAreaField({ label, ...props }) {
   return (
     <label className="block">
       <span className="text-sm font-semibold text-slate-700">
@@ -844,17 +743,13 @@ function TextAreaField({
       <textarea
         {...props}
         rows={4}
-        className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+        className="mt-2 block w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
       />
     </label>
   );
 }
 
-function SelectField({
-  label,
-  children,
-  ...props
-}) {
+function SelectField({ label, children, ...props }) {
   return (
     <label className="block">
       <span className="text-sm font-semibold text-slate-700">
@@ -863,7 +758,7 @@ function SelectField({
 
       <select
         {...props}
-        className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+        className="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
       >
         {children}
       </select>
@@ -871,21 +766,12 @@ function SelectField({
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  icon: Icon,
-  tone,
-}) {
+function SummaryCard({ label, value, icon: Icon, tone }) {
   const tones = {
-    blue:
-      "bg-blue-100 text-blue-700",
-    green:
-      "bg-emerald-100 text-emerald-700",
-    amber:
-      "bg-amber-100 text-amber-700",
-    purple:
-      "bg-purple-100 text-purple-700",
+    blue: "bg-blue-100 text-blue-700",
+    green: "bg-emerald-100 text-emerald-700",
+    amber: "bg-amber-100 text-amber-700",
+    purple: "bg-purple-100 text-purple-700",
   };
 
   return (
@@ -901,68 +787,33 @@ function SummaryCard({
           </p>
         </div>
 
-        <div
-          className={`rounded-lg p-3 ${tones[tone]}`}
-        >
-          <Icon className="h-5 w-5" />
+        <div className={`rounded-lg p-3 ${tones[tone]}`}>
+          <Icon aria-hidden="true" className="h-5 w-5" />
         </div>
       </div>
     </article>
   );
 }
 
-function ReportBadge({
-  recorded,
-}) {
-  return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
-        recorded
-          ? "bg-emerald-100 text-emerald-700"
-          : "bg-amber-100 text-amber-700"
-      }`}
-    >
-      {recorded
-        ? "Recorded"
-        : "Pending"}
-    </span>
-  );
-}
-
-function Detail({
-  label,
-  value,
-}) {
+function Detail({ label, value }) {
   return (
     <div className="rounded-lg bg-slate-50 p-3">
       <dt className="text-xs font-bold uppercase tracking-wider text-slate-500">
         {label}
       </dt>
 
-      <dd className="mt-1 text-slate-800">
+      <dd className="mt-1 whitespace-pre-wrap text-slate-800">
         {value}
       </dd>
     </div>
   );
 }
 
-function ErrorMessage({
-  message,
-}) {
-  return (
-    <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      {message}
-    </div>
-  );
-}
-
-function PageMessage({
-  message,
-  error = false,
-}) {
+function PageMessage({ message, error = false }) {
   return (
     <main className="p-5 md:p-8">
       <div
+        role={error ? "alert" : "status"}
         className={`mx-auto max-w-4xl rounded-xl border p-8 text-center ${
           error
             ? "border-red-200 bg-red-50 text-red-700"
@@ -975,35 +826,73 @@ function PageMessage({
   );
 }
 
-function getAssignmentLabel(
-  assignment,
-) {
-  const studentName =
-    assignment.student
-      ?.full_name ||
+function groupByProject(assignments) {
+  const groups = new Map();
+
+  for (const assignment of assignments) {
+    const id = assignment.project?.project_id || "unavailable";
+
+    if (!groups.has(id)) {
+      groups.set(id, {
+        id,
+        title: assignment.project?.title || "Service Project",
+        assignments: [],
+      });
+    }
+
+    groups.get(id).assignments.push(assignment);
+  }
+
+  return [...groups.values()].sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
+}
+
+function getAssignmentLabel(assignment) {
+  const student =
+    assignment.student?.full_name ||
     assignment.student?.email ||
     "Student";
 
-  const projectTitle =
-    assignment.project?.title ||
-    "Service Project";
+  const activity =
+    assignment.schedule?.task_title || "Scheduled Activity";
 
-  const activityTitle =
-    assignment.schedule
-      ?.task_title ||
-    "Scheduled Activity";
+  return `${student} — ${activity}`;
+}
 
-  return `${studentName} — ${projectTitle} — ${activityTitle}`;
+function getTodayInNigeria() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const part = (type) =>
+    parts.find((item) => item.type === type)?.value;
+
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+function formatDate(value) {
+  if (!value) return "Date not specified";
+
+  const date = new Date(`${value}T12:00:00+01:00`);
+
+  if (Number.isNaN(date.getTime())) return "Date not available";
+
+  return new Intl.DateTimeFormat("en-NG", {
+    timeZone: "Africa/Lagos",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatLabel(value) {
-  if (!value) {
-    return "Not Observed";
-  }
+  if (!value) return "Not Observed";
 
   return String(value)
     .replaceAll("_", " ")
-    .replace(/\b\w/g, (letter) =>
-      letter.toUpperCase(),
-    );
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
