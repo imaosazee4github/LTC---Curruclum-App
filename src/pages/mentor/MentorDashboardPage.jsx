@@ -22,7 +22,7 @@ export default function MentorDashboardPage() {
   if (mentorDashboardLoading) {
     return (
       <MentoringLayout>
-        <PageMessage message="Loading your mentor dashboard..." />
+        <PageMessage message="Loading your advisor dashboard..." />
       </MentoringLayout>
     );
   }
@@ -37,7 +37,7 @@ export default function MentorDashboardPage() {
           error
           message={
             mentorDashboardError?.message ||
-            "Your mentor dashboard could not be loaded."
+            "Your advisor dashboard could not be loaded."
           }
         />
       </MentoringLayout>
@@ -62,7 +62,7 @@ export default function MentorDashboardPage() {
             </p>
 
             <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-              Mentor Dashboard
+              Advisor Dashboard
             </h1>
 
             <p className="mt-2 max-w-3xl leading-7 text-slate-600">
@@ -81,7 +81,7 @@ export default function MentorDashboardPage() {
 
           <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
-              label="Assigned Mentees"
+              label="Assigned Students"
               value={
                 summary.assignedMentees
               }
@@ -141,7 +141,7 @@ export default function MentorDashboardPage() {
           <div className="mt-8 grid gap-8 xl:grid-cols-[1.3fr_0.7fr]">
             <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <SectionHeader
-                title="My Mentees"
+                title="My Students"
                 description="Students currently assigned to you."
               />
 
@@ -161,7 +161,7 @@ export default function MentorDashboardPage() {
               ) : (
                 <EmptyState
                   title="No assigned students"
-                  description="Students assigned by the Mentor Department will appear here."
+                  description="Students assigned by the Advisory Department will appear here."
                 />
               )}
             </section>
@@ -169,7 +169,7 @@ export default function MentorDashboardPage() {
             <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <SectionHeader
                 title="My Actions"
-                description="Priority mentoring actions and deadlines."
+                description="Priority advisory actions and deadlines."
               />
 
               {actions.length > 0 ? (
@@ -216,7 +216,7 @@ export default function MentorDashboardPage() {
             ) : (
               <EmptyState
                 title="No reports submitted"
-                description="Your submitted mentor reports will appear here."
+                description="Your submitted advisory reports will appear here."
               />
             )}
           </section>
@@ -303,7 +303,7 @@ function MenteeCard({ mentee }) {
           </>
         ) : (
           <p className="text-sm text-slate-500">
-            No mentor report recorded yet.
+            No advisory report recorded yet.
           </p>
         )}
       </div>

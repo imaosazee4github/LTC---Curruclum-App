@@ -176,7 +176,7 @@ export default function MentorMenteesPage() {
 
       setSuccessMessage(
         result?.message ||
-          "Your mentor report was submitted successfully.",
+          "Your advisory report was submitted successfully.",
       );
     } catch {
       /*
@@ -222,14 +222,14 @@ export default function MentorMenteesPage() {
               </p>
 
               <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-                My Mentees
+                My Students
               </h1>
 
               <p className="mt-2 max-w-3xl leading-7 text-slate-600">
                 Review your assigned students
                 and submit structured
                 developmental reports for
-                Mentor Department review.
+                Advisory Department review.
               </p>
             </div>
 
@@ -269,7 +269,7 @@ export default function MentorMenteesPage() {
             <SummaryCard
               label="Assigned Students"
               value={mentees.length}
-              detail="Active mentoring relationships"
+              detail="Active advisory relationships"
               tone="blue"
             />
 
@@ -299,8 +299,7 @@ export default function MentorMenteesPage() {
 
               <p className="mt-1 text-sm leading-6 text-slate-600">
                 Reports submitted here go
-                directly to the Mentor
-                Department review queue.
+                directly to the Advisory Department review queue.
               </p>
             </div>
 
@@ -425,7 +424,7 @@ function MenteeCard({
           </div>
         ) : (
           <p className="mt-2 text-sm text-slate-500">
-            No mentor report recorded yet.
+            No advisory report recorded yet.
           </p>
         )}
       </div>
@@ -437,7 +436,7 @@ function MenteeCard({
       >
         <ClipboardPlus size={18} />
 
-        Record Mentor Report
+        Record Advisor Report
       </button>
     </article>
   );
@@ -471,7 +470,7 @@ function ReportModal({
         <header className="sticky top-0 z-10 flex items-start justify-between gap-5 border-b border-slate-200 bg-white px-6 py-5">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-              Mentor Report
+              Advisor Report
             </p>
 
             <h2
@@ -483,7 +482,7 @@ function ReportModal({
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Submit for Mentor Department
+              Submit for Advisory Department
               review.
             </p>
           </div>
@@ -650,7 +649,7 @@ function ReportModal({
 
               <FormTextarea
                 name="feedback"
-                label="Mentor feedback"
+                label="Advisor feedback"
                 value={form.feedback}
                 onChange={onChange}
                 required
@@ -707,7 +706,7 @@ function ReportModal({
           <section>
             <SectionTitle
               title="Confidentiality and Visibility"
-              description="The Mentor Department makes the final student-visibility decision."
+              description="The Advisory Department makes the final student-visibility decision."
             />
 
             <div className="mt-4 grid gap-5 md:grid-cols-2">
@@ -766,7 +765,7 @@ function ReportModal({
                     <span className="mt-1 block text-sm leading-6 text-slate-500">
                       The student will see only
                       the summary approved by
-                      the Mentor Department.
+                      the Advisory Department.
                     </span>
                   </span>
                 </label>
@@ -796,7 +795,7 @@ function ReportModal({
               className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700"
             >
               {error.message ||
-                "The mentor report could not be submitted."}
+                "The advisory report could not be submitted."}
             </div>
           ) : null}
 
@@ -989,8 +988,7 @@ function EmptyState() {
       </p>
 
       <p className="mt-2 text-sm text-slate-500">
-        Students assigned by the Mentor
-        Department will appear here.
+        Students assigned by the Advisory Department will appear here.
       </p>
     </div>
   );

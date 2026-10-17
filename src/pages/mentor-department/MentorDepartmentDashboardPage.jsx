@@ -22,7 +22,7 @@ export default function MentorDepartmentDashboardPage() {
   if (mentorDepartmentLoading) {
     return (
       <MentoringLayout>
-        <PageMessage message="Loading Mentor Department dashboard..." />
+        <PageMessage message="Loading Advisory Department dashboard..." />
       </MentoringLayout>
     );
   }
@@ -37,7 +37,7 @@ export default function MentorDepartmentDashboardPage() {
           error
           message={
             mentorDepartmentError?.message ||
-            "The Mentor Department dashboard could not be loaded."
+            "The Advisory Department dashboard could not be loaded."
           }
         />
       </MentoringLayout>
@@ -56,15 +56,15 @@ export default function MentorDepartmentDashboardPage() {
         <div className="mx-auto max-w-7xl">
           <header>
             <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-              Mentoring Operations
+              Advisory Operations
             </p>
 
             <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-              Mentor Department Dashboard
+              Advisory Department Dashboard
             </h1>
 
             <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-              Manage mentor capacity,
+              Manage advisor capacity,
               student assignments, report
               review and required follow-up.
             </p>
@@ -72,7 +72,7 @@ export default function MentorDepartmentDashboardPage() {
 
           <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
-              label="Active Mentors"
+              label="Active Advisors"
               value={
                 summary.activeMentors
               }
@@ -86,7 +86,7 @@ export default function MentorDepartmentDashboardPage() {
               value={
                 summary.activeAssignments
               }
-              detail="Current mentoring relationships"
+              detail="Current advisory relationships"
               icon={UserRoundCheck}
               tone="green"
             />
@@ -97,7 +97,7 @@ export default function MentorDepartmentDashboardPage() {
                 summary
                   .studentsAwaitingAssignment
               }
-              detail="Students requiring mentors"
+              detail="Students requiring advisors"
               icon={Clock3}
               tone="amber"
             />
@@ -152,8 +152,8 @@ export default function MentorDepartmentDashboardPage() {
           <div className="mt-8 grid gap-8 xl:grid-cols-[1.25fr_0.75fr]">
             <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
               <SectionHeader
-                title="Mentor Workload"
-                description="Current mentor capacity, assignments and overdue actions."
+                title="Advisor Workload"
+                description="Current advisor capacity, assignments and overdue actions."
               />
 
               {mentorWorkload.length > 0 ? (
@@ -162,7 +162,7 @@ export default function MentorDepartmentDashboardPage() {
                     <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
                       <tr>
                         <th className="px-5 py-4">
-                          Mentor
+                          Advisor
                         </th>
 
                         <th className="px-5 py-4">
@@ -199,8 +199,8 @@ export default function MentorDepartmentDashboardPage() {
                 </div>
               ) : (
                 <EmptyState
-                  title="No mentors available"
-                  description="Appointed mentors and their workload will appear here."
+                  title="No advisors available"
+                  description="Appointed advisors and their workload will appear here."
                 />
               )}
             </section>
@@ -250,7 +250,7 @@ export default function MentorDepartmentDashboardPage() {
                 />
 
                 <AlertItem
-                  label="Students awaiting mentors"
+                  label="Students awaiting advisors"
                   value={
                     summary
                       .studentsAwaitingAssignment
@@ -262,8 +262,8 @@ export default function MentorDepartmentDashboardPage() {
 
           <section className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <SectionHeader
-              title="Recent Mentor Reports"
-              description="Latest reports submitted by assigned mentors."
+              title="Recent Advisor Reports"
+              description="Latest reports submitted by assigned advisors."
             />
 
             {recentReports.length > 0 ? (
@@ -281,8 +281,8 @@ export default function MentorDepartmentDashboardPage() {
               </div>
             ) : (
               <EmptyState
-                title="No mentor reports"
-                description="Submitted mentor reports will appear here for department review."
+                title="No advisory reports"
+                description="Submitted advisory reports will appear here for department review."
               />
             )}
           </section>
@@ -383,7 +383,7 @@ function MentorRow({ mentor }) {
           <div>
             <p className="font-semibold text-slate-900">
               {mentor.full_name ||
-                "Unnamed mentor"}
+                "Unnamed advisor"}
             </p>
 
             <p className="mt-1 text-xs text-slate-500">
@@ -447,7 +447,7 @@ function ReportRow({ report }) {
             report.report_type,
           )}
           {" · "}
-          Mentor:{" "}
+          Advisor:{" "}
           {report.mentor_name}
         </p>
       </div>
@@ -549,7 +549,7 @@ function ProfilePhoto({
     return (
       <img
         src={url}
-        alt={`${name || "Mentor"} profile`}
+        alt={`${name || "Advisor"} profile`}
         className="h-10 w-10 rounded-full object-cover"
       />
     );

@@ -122,25 +122,25 @@ export default function SuperAdminDashboardPage() {
     },
     {
       id: "urgent-reports",
-      title: "Urgent mentor reports",
+      title: "Urgent advisory reports",
       count: summary.urgentMentorReports,
       urgent: true,
       description:
-        "Review the urgent reports and coordinate the support or follow-up needed with the mentoring department.",
+        "Review the urgent reports and coordinate the support or follow-up needed with the Advisory Department.",
     },
     {
       id: "reports",
-      title: "Mentor reports awaiting review",
+      title: "Advisor reports awaiting review",
       count: summary.mentorReportsAwaitingReview,
       description:
-        "Review submitted reports and reports under review with the mentoring department. Urgent reports may also appear in this count.",
+        "Review submitted reports and reports under review with the Advisory Department. Urgent reports may also appear in this count.",
     },
     {
       id: "mentors",
-      title: "Students without mentors",
+      title: "Students without advisors",
       count: summary.studentsWithoutMentors,
       description:
-        "Check which students have no assigned mentor and arrange their mentor assignments with the mentoring department.",
+        "Check which students have no assigned advisor and arrange their advisor assignments with the Advisory Department.",
       button: "View students",
       target: "students",
     },
@@ -171,7 +171,7 @@ export default function SuperAdminDashboardPage() {
 
               <p className="mt-2 max-w-3xl leading-7 text-slate-600">
                 Monitor students, review registrations and oversee learning,
-                development and mentoring activities.
+                development and advisory activities.
               </p>
             </div>
 
@@ -231,7 +231,7 @@ export default function SuperAdminDashboardPage() {
             />
 
             <SummaryCard
-              label="Active Mentors"
+              label="Active Advisors"
               value={summary.mentors}
               detail={`${summary.activeMentorAssignments} active assignments`}
               icon={HeartHandshake}

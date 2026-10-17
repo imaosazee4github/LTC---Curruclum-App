@@ -49,7 +49,7 @@ export async function submitMentorReport({
 
   if (!feedback?.trim()) {
     throw new Error(
-      "Enter your mentor feedback.",
+      "Enter your advisory feedback.",
     );
   }
 

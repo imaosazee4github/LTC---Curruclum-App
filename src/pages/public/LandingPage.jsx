@@ -65,7 +65,7 @@ const PROCESS_STEPS = [
     number: "4",
     title: "Follow Up",
     description:
-      "Mentors and administrators coordinate the appropriate next activity, support or intervention.",
+      "Advisors and administrators coordinate the appropriate next activity, support or intervention.",
   },
 ];
 
@@ -113,7 +113,7 @@ function HeroSection() {
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
             A secure student tracking system
             that connects learning activities,
-            mentoring, reflection, spiritual
+            advisory, reflection, spiritual
             formation and meaningful
             follow-up across the LTC Pioneer
             experience.
@@ -143,7 +143,7 @@ function HeroSection() {
 
             <HeroStat
               value="Ongoing"
-              label="Mentor follow-up"
+              label="Advisor follow-up"
             />
 
             <HeroStat
@@ -181,7 +181,7 @@ function HeroSection() {
 
             <FeatureItem
               title="Coordinated follow-up"
-              description="Help mentors and educators respond to emerging needs."
+              description="Help advisors and educators respond to emerging needs."
             />
           </div>
         </div>
@@ -211,7 +211,7 @@ function ProgrammeSection() {
             The portal records the learning
             experiences that take place while
             helping authorized educators,
-            mentors and administrators
+            advisors and administrators
             coordinate student support.
           </p>
 
@@ -237,7 +237,7 @@ function ProgrammeSection() {
           />
 
           <InformationCard
-            title="Mentoring"
+            title="Advisoring"
             description="Student check-ins, case notes, support needs and agreed actions."
           />
 
@@ -273,7 +273,7 @@ function DevelopmentSection() {
             understanding of the student’s
             development without replacing
             professional observation,
-            mentoring or assessment.
+            advisory or assessment.
           </p>
         </div>
 

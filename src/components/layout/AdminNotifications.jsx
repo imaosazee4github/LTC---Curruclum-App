@@ -59,25 +59,25 @@ export default function AdminNotifications() {
     },
     {
       id: "urgent",
-      title: "Urgent mentor reports",
+      title: "Urgent advisory reports",
       count: summary.urgentMentorReports,
       urgent: true,
       description:
-        "Coordinate with the mentoring department to review these reports and arrange the required support or follow-up.",
+        "Coordinate with the Advisory Department to review these reports and arrange the required support or follow-up.",
     },
     {
       id: "reports",
-      title: "Mentor reports awaiting review",
+      title: "Advisor reports awaiting review",
       count: summary.mentorReportsAwaitingReview,
       description:
-        "Ask the mentoring department to review submitted reports and complete outstanding reviews. Urgent reports may also be included in this count.",
+        "Ask the Advisory Department to review submitted reports and complete outstanding reviews. Urgent reports may also be included in this count.",
     },
     {
       id: "mentors",
-      title: "Students without mentors",
+      title: "Students without advisors",
       count: summary.studentsWithoutMentors,
       description:
-        "Identify students without a mentor and coordinate their mentor assignments with the mentoring department.",
+        "Identify students without an advisor and coordinate their advisor assignments with the Advisory Department.",
       path: "/super-admin/dashboard#students",
       button: "View students",
     },

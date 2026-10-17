@@ -24,6 +24,7 @@ import SuperAdminStudentDetailsPage from "../pages/super-admin/SuperAdminStudent
 import MentorAssignmentsPage from "../pages/mentor-department/MentorAssignmentsPage";
 import MentorDepartmentDashboardPage from "../pages/mentor-department/MentorDepartmentDashboardPage";
 import MentorReportsPage from "../pages/mentor-department/MentorReportsPage";
+import DevotionsPage from "../pages/mentor-department/DevotionsPage";
 import MentorDashboardPage from "../pages/mentor/MentorDashboardPage";
 import MentorMenteesPage from "../pages/mentor/MentorMenteesPage";
 
@@ -194,6 +195,11 @@ const protectedPages = [
     element: <MentorReportsPage />,
   },
   {
+    path: "/mentor-department/devotions",
+    role: "mentor_department",
+    element: <DevotionsPage />,
+  },
+  {
     path: "/mentor/dashboard",
     role: "mentor",
     element: <MentorDashboardPage />,
@@ -297,10 +303,12 @@ export default function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+
       <Route
         path="/student/register"
         element={<StudentRegistrationPage />}
       />
+
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
       <Route

@@ -126,7 +126,7 @@ export default function StudentDashboardPage() {
               </h1>
 
               <p className="mt-2 leading-7 text-slate-600">
-                View today’s activities, your mentor and approved feedback.
+                View today’s activities, your advisor and approved feedback.
               </p>
             </div>
 
@@ -199,7 +199,7 @@ export default function StudentDashboardPage() {
             />
 
             <OverviewCard
-              label="Assigned Mentor"
+              label="Assigned Advisor"
               value={
                 assignedMentorError
                   ? "Unavailable"
@@ -266,32 +266,32 @@ export default function StudentDashboardPage() {
 
             <div className="space-y-8">
               <DashboardSection
-                title="My Mentor"
-                description="Your assigned development mentor."
+                title="My Advisor"
+                description="Your assigned development advisor."
               >
                 {assignedMentorError ? (
                   <ErrorMessage
                     message={
                       assignedMentorError.message ||
-                      "Mentor details could not be loaded."
+                      "Advisor details could not be loaded."
                     }
                   />
                 ) : assignedMentorLoading ? (
                   <p role="status" className="text-sm text-slate-500">
-                    Loading mentor details...
+                    Loading advisor details...
                   </p>
                 ) : mentor ? (
                   <AssignedMentorCard mentor={mentor} now={now} />
                 ) : (
                   <EmptyState
-                    title="No mentor assigned yet"
-                    description="Your mentor details will appear once an assignment is made."
+                    title="No advisor assigned yet"
+                    description="Your advisor details will appear once an assignment is made."
                   />
                 )}
               </DashboardSection>
 
               <DashboardSection
-                title="Approved Mentor Feedback"
+                title="Approved Advisor Feedback"
                 description="Feedback reviewed and approved for your viewing."
               >
                 {mentorFeedbackError ? (
@@ -317,7 +317,7 @@ export default function StudentDashboardPage() {
                 ) : (
                   <EmptyState
                     title="No approved feedback yet"
-                    description="Mentor feedback appears after review and approval by the Mentor Department."
+                    description="Advisor feedback appears after review and approval by the Advisory Department."
                   />
                 )}
               </DashboardSection>
@@ -388,7 +388,7 @@ function AssignedMentorCard({ mentor, now }) {
         {mentor.profile_photo_url ? (
           <img
             src={mentor.profile_photo_url}
-            alt={`${mentor.full_name || "Mentor"} profile`}
+            alt={`${mentor.full_name || "Advisor"} profile`}
             className="h-16 w-16 rounded-full object-cover"
           />
         ) : (
@@ -402,7 +402,7 @@ function AssignedMentorCard({ mentor, now }) {
 
         <div>
           <h3 className="text-lg font-bold text-blue-950">
-            {mentor.full_name || "Assigned mentor"}
+            {mentor.full_name || "Assigned advisor"}
           </h3>
 
           <p className="mt-1 text-sm text-purple-700">
@@ -424,7 +424,7 @@ function AssignedMentorCard({ mentor, now }) {
         />
 
         <MentorDetail
-          label="Mentoring started"
+          label="Advisory started"
           value={formatDateValue(mentor.start_date)}
         />
 
@@ -441,7 +441,7 @@ function AssignedMentorCard({ mentor, now }) {
 
       {checkInIsPast && (
         <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm leading-6 text-amber-900">
-          The listed check-in date has passed. Confirm with your mentor
+          The listed check-in date has passed. Confirm with your advisor
           whether it took place or needs rescheduling.
         </p>
       )}
@@ -453,7 +453,7 @@ function ApprovedMentorFeedbackCard({ feedback }) {
   return (
     <article className="rounded-xl border border-purple-200 bg-purple-50/50 p-4">
       <p className="font-semibold text-blue-950">
-        {feedback.mentor?.full_name || "Your mentor"}
+        {feedback.mentor?.full_name || "Your advisor"}
       </p>
 
       <p className="mt-1 text-xs text-slate-500">

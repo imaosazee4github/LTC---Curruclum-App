@@ -9,8 +9,8 @@ const ROLE_LABELS = {
   coach: "Coach",
   project_coordinator: "Project Coordinator",
   site_supervisor: "Site Supervisor",
-  mentor: "Mentor",
-  mentor_department: "Mentor Department",
+  mentor: "Advisor",
+  mentor_department: "Advisory Department",
 };
 
 function formatDate(value) {
