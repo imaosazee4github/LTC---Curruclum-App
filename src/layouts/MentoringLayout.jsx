@@ -11,15 +11,75 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  Link,
-  NavLink,
-  useNavigate,
-} from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useState } from "react";
 
 import { useAuth } from "../hooks/useAuth";
+
+// const navigationByRole = {
+//   mentor_department: [
+//     {
+//       label: "Dashboard",
+//       path: "/mentor-department/dashboard",
+//       icon: LayoutDashboard,
+//       available: true,
+//     },
+//     {
+//       label: "Advisor Assignments",
+//       path: "/mentor-department/assignments",
+//       icon: UserRoundCheck,
+//       available: true,
+//     },
+//     {
+//       label: "Advisory Reports",
+//       path: "/mentor-department/reports",
+//       icon: ClipboardList,
+//       available: true,
+//     },
+//     {
+//       label: "Devotions",
+//       path: "/mentor-department/devotions",
+//       icon: CalendarDays,
+//       available: true,
+//     },
+//     {
+//       label: "My Actions",
+//       path: "/mentor/actions",
+//       icon: ListChecks,
+//       available: true,
+//     },
+//   ],
+
+//   mentor: [
+//     {
+//       label: "Dashboard",
+//       path: "/mentor/dashboard",
+//       icon: LayoutDashboard,
+//       available: true,
+//     },
+//     {
+//       label: "My Students",
+//       path: "/mentor/mentees",
+//       icon: Users,
+//       available: true,
+//     },
+//     {
+//       label: "My Reports",
+//       path: "/mentor/reports",
+//       icon: ClipboardList,
+//       available: true,
+//     },
+//     {
+//       label: "My Actions",
+//       path: "/mentor/actions",
+//       icon: ListChecks,
+//       available: false,
+//     },
+//   ],
+// };
+
+
 
 const navigationByRole = {
   mentor_department: [
@@ -51,7 +111,7 @@ const navigationByRole = {
       label: "Follow-Up Actions",
       path: "/mentor-department/follow-ups",
       icon: ListChecks,
-      available: false,
+      available: true,
     },
   ],
 
@@ -78,11 +138,10 @@ const navigationByRole = {
       label: "My Actions",
       path: "/mentor/actions",
       icon: ListChecks,
-      available: false,
+      available: true,
     },
   ],
 };
-
 const portalDetails = {
   mentor_department: {
     title: "Advisory Department",
@@ -153,9 +212,7 @@ export default function MentoringLayout({ children }) {
           onOpenMenu={() => setMenuOpen(true)}
         />
 
-        <div className="min-h-[calc(100vh-4.5rem)]">
-          {children}
-        </div>
+        <div className="min-h-[calc(100vh-4.5rem)]">{children}</div>
       </div>
     </div>
   );
@@ -285,12 +342,7 @@ function AdvisorySidebar({
   );
 }
 
-function AdvisoryHeader({
-  profile,
-  role,
-  portal,
-  onOpenMenu,
-}) {
+function AdvisoryHeader({ profile, role, portal, onOpenMenu }) {
   return (
     <header className="sticky top-0 z-20 flex h-[4.5rem] items-center justify-between border-b border-slate-200 bg-white px-5 lg:px-8">
       <div className="flex items-center gap-3">
@@ -304,12 +356,8 @@ function AdvisoryHeader({
         </button>
 
         <div>
-          <p className="text-sm text-slate-500">
-            LTC Pioneer Programme
-          </p>
-          <p className="font-semibold text-slate-950">
-            {portal.title}
-          </p>
+          <p className="text-sm text-slate-500">LTC Pioneer Programme</p>
+          <p className="font-semibold text-slate-950">{portal.title}</p>
         </div>
       </div>
 
@@ -327,9 +375,7 @@ function AdvisoryHeader({
           <p className="max-w-48 truncate text-sm font-semibold text-slate-800">
             {profile?.full_name || portal.title}
           </p>
-          <p className="text-xs text-slate-500">
-            {formatRole(role)}
-          </p>
+          <p className="text-xs text-slate-500">{formatRole(role)}</p>
         </div>
 
         <ProfilePhoto profile={profile} size="header" />
