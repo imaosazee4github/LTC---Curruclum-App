@@ -152,7 +152,7 @@ export default function StudentOverviewTable() {
                     "Student",
                     "Phone number",
                     "Student number",
-                    "Mentor",
+                    "Advisor",
                     "Instructors",
                     "Coaches",
                     "Facilitators",

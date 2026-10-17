@@ -124,7 +124,7 @@ export async function assignStudentToMentor({
 
   if (!mentorProfileId) {
     throw new Error(
-      "Select a mentor.",
+      "Select an advisor.",
     );
   }
 
@@ -162,7 +162,7 @@ export async function closeMentorAssignment({
 }) {
   if (!assignmentId) {
     throw new Error(
-      "Select a mentor assignment.",
+      "Select an advisor assignment.",
     );
   }
 
@@ -209,7 +209,7 @@ export async function reviewMentorReport({
 }) {
   if (!reportId) {
     throw new Error(
-      "Select a mentor report.",
+      "Select an advisory report.",
     );
   }
 

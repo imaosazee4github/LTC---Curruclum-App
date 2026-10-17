@@ -137,7 +137,7 @@ export default function MentorReportsPage() {
 
       setSuccessMessage(
         result?.message ||
-          "The mentor report was reviewed successfully.",
+          "The advisory report was reviewed successfully.",
       );
 
       setSelectedReport(null);
@@ -153,7 +153,7 @@ export default function MentorReportsPage() {
   if (mentoringReportQueueLoading) {
     return (
       <MentoringLayout>
-        <PageMessage message="Loading mentor reports..." />
+        <PageMessage message="Loading advisory reports..." />
       </MentoringLayout>
     );
   }
@@ -165,7 +165,7 @@ export default function MentorReportsPage() {
           error
           message={
             mentoringReportQueueError.message ||
-            "Mentor reports could not be loaded."
+            "Advisor reports could not be loaded."
           }
         />
       </MentoringLayout>
@@ -179,15 +179,15 @@ export default function MentorReportsPage() {
           <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-                Mentoring Operations
+                Advisory Operations
               </p>
 
               <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-                Mentor Reports
+                Advisor Reports
               </h1>
 
               <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-                Review reports submitted by mentors,
+                Review reports submitted by advisors,
                 determine required actions and approve
                 appropriate feedback for students.
               </p>
@@ -340,7 +340,7 @@ export default function MentorReportsPage() {
                 </h3>
 
                 <p className="mt-2 text-sm text-slate-500">
-                  No mentor reports match the
+                  No advisory reports match the
                   selected filters.
                 </p>
               </div>
@@ -416,7 +416,7 @@ function ReportRow({
               report by{" "}
               <strong>
                 {report.mentor?.full_name ||
-                  "Mentor"}
+                  "Advisor"}
               </strong>
             </p>
 
@@ -461,7 +461,7 @@ function ReviewModal({
         <header className="flex items-start justify-between border-b border-slate-200 p-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-              Mentor Report Review
+              Advisor Report Review
             </p>
 
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
@@ -472,7 +472,7 @@ function ReviewModal({
             <p className="mt-1 text-sm text-slate-500">
               Submitted by{" "}
               {report.mentor?.full_name ||
-                "Mentor"}
+                "Advisor"}
             </p>
           </div>
 
@@ -528,7 +528,7 @@ function ReviewModal({
             />
 
             <ReportDetail
-              title="Mentor Feedback"
+              title="Advisor Feedback"
               value={report.feedback}
             />
 
@@ -631,7 +631,7 @@ function ReviewModal({
                 value={form.reviewNotes}
                 onChange={onChange}
                 rows={4}
-                placeholder="Record the department's review notes and any instructions for the mentor."
+                placeholder="Record the department's review notes and any instructions for the advisor."
                 className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
               />
             </label>

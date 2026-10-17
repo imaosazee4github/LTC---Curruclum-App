@@ -92,7 +92,7 @@ export default function MentorAssignmentsPage() {
 
       setSuccessMessage(
         result?.message ||
-          "The student was assigned to the mentor successfully.",
+          "The student was assigned to the advisor successfully.",
       );
 
       setForm(initialForm);
@@ -122,7 +122,7 @@ export default function MentorAssignmentsPage() {
           error
           message={
             assignmentOptionsError?.message ||
-            "Mentoring assignment options could not be loaded."
+            "Advisory assignment options could not be loaded."
           }
         />
       </MentoringLayout>
@@ -136,16 +136,15 @@ export default function MentorAssignmentsPage() {
           <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-                Mentoring Operations
+                Advisory Operations
               </p>
 
               <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-                Mentor Assignments
+                Advisor Assignments
               </h1>
 
               <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-                Assign students to available
-                mentors and schedule their
+                Assign students to available advisors and schedule their
                 first developmental check-in.
               </p>
             </div>
@@ -175,12 +174,12 @@ export default function MentorAssignmentsPage() {
 
           <section className="mt-8 grid gap-5 sm:grid-cols-2">
             <SummaryCard
-              label="Available Mentors"
+              label="Available Advisors"
               value={
                 assignmentOptions
                   .totalAvailableMentors
               }
-              detail="Mentors currently accepting mentees"
+              detail="Advisors currently accepting students"
               icon={Users}
               tone="blue"
             />
@@ -191,7 +190,7 @@ export default function MentorAssignmentsPage() {
                 assignmentOptions
                   .totalStudentsAwaitingAssignment
               }
-              detail="Students who currently need mentors"
+              detail="Students who currently need advisors"
               icon={UserRoundCheck}
               tone="amber"
             />
@@ -206,7 +205,7 @@ export default function MentorAssignmentsPage() {
 
                 <p className="mt-1 text-sm leading-6 text-slate-600">
                   Select a student and an
-                  available mentor.
+                  available advisor.
                 </p>
               </div>
 
@@ -257,7 +256,7 @@ export default function MentorAssignmentsPage() {
                 </FormField>
 
                 <FormField
-                  label="Mentor"
+                  label="Advisor"
                   htmlFor="mentorProfileId"
                   required
                 >
@@ -276,7 +275,7 @@ export default function MentorAssignmentsPage() {
                     className={inputClasses}
                   >
                     <option value="">
-                      Select a mentor
+                      Select an advisor
                     </option>
 
                     {mentors.map(
@@ -340,7 +339,7 @@ export default function MentorAssignmentsPage() {
                     disabled={
                       assigningMentor
                     }
-                    placeholder="Explain the student's mentoring needs or assignment context."
+                    placeholder="Explain the student's advisory needs or assignment context."
                     className={`${inputClasses} resize-y`}
                   />
                 </FormField>
@@ -389,9 +388,9 @@ export default function MentorAssignmentsPage() {
               <OptionsSection
                 hasItems={students.length > 0}
                 title="Students Awaiting Assignment"
-                description="Active students who do not currently have a mentor."
+                description="Active students who do not currently have an advisor."
                 emptyTitle="No students awaiting assignment"
-                emptyDescription="All eligible students currently have mentors."
+                emptyDescription="All eligible students currently have advisors."
               >
                 <div className="divide-y divide-slate-200">
                   {students.map(
@@ -409,10 +408,10 @@ export default function MentorAssignmentsPage() {
 
               <OptionsSection
                 hasItems={mentors.length > 0}
-                title="Available Mentors"
-                description="Mentors with capacity for additional students."
-                emptyTitle="No mentors currently available"
-                emptyDescription="Add mentors or update mentor capacity before assigning students."
+                title="Available Advisors"
+                description="Advisors with capacity for additional students."
+                emptyTitle="No advisors currently available"
+                emptyDescription="Add advisors or update advisor capacity before assigning students."
               >
                 <div className="divide-y divide-slate-200">
                   {mentors.map(
@@ -480,7 +479,7 @@ function MentorRow({
   const name =
     mentor.full_name ||
     mentor.mentor_name ||
-    "Mentor";
+    "Advisor";
 
   const activeAssignments =
     Number(
@@ -764,7 +763,7 @@ function getMentorLabel(mentor) {
   const name =
     mentor.full_name ||
     mentor.mentor_name ||
-    "Mentor";
+    "Advisor";
 
   const remaining =
     mentor.remaining_capacity;

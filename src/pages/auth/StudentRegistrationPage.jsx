@@ -10,8 +10,8 @@ const ROLE_OPTIONS = [
   { value: "coach", label: "Coach" },
   { value: "project_coordinator", label: "Project Coordinator" },
   { value: "site_supervisor", label: "Site Supervisor" },
-  { value: "mentor", label: "Mentor" },
-  { value: "mentor_department", label: "Mentor Department" },
+  { value: "mentor", label: "Advisor" },
+  { value: "mentor_department", label: "Advisory Department" },
 ];
 
 const EDUCATOR_ROLES = ["instructor", "facilitator", "coach"];

@@ -1,5 +1,6 @@
 import {
   Bell,
+  CalendarDays,
   ClipboardList,
   LayoutDashboard,
   ListChecks,
@@ -16,9 +17,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
 import { useAuth } from "../hooks/useAuth";
 
@@ -26,29 +25,31 @@ const navigationByRole = {
   mentor_department: [
     {
       label: "Dashboard",
-      path:
-        "/mentor-department/dashboard",
+      path: "/mentor-department/dashboard",
       icon: LayoutDashboard,
       available: true,
     },
     {
-      label: "Mentor Assignments",
-      path:
-        "/mentor-department/assignments",
+      label: "Advisor Assignments",
+      path: "/mentor-department/assignments",
       icon: UserRoundCheck,
       available: true,
     },
     {
-      label: "Mentor Reports",
-      path:
-        "/mentor-department/reports",
+      label: "Advisory Reports",
+      path: "/mentor-department/reports",
       icon: ClipboardList,
       available: true,
     },
     {
+      label: "Devotions",
+      path: "/mentor-department/devotions",
+      icon: CalendarDays,
+      available: true,
+    },
+    {
       label: "Follow-Up Actions",
-      path:
-        "/mentor-department/follow-ups",
+      path: "/mentor-department/follow-ups",
       icon: ListChecks,
       available: false,
     },
@@ -62,7 +63,7 @@ const navigationByRole = {
       available: true,
     },
     {
-      label: "My Mentees",
+      label: "My Students",
       path: "/mentor/mentees",
       icon: Users,
       available: true,
@@ -84,70 +85,51 @@ const navigationByRole = {
 
 const portalDetails = {
   mentor_department: {
-    title: "Mentor Department",
-    subtitle: "Mentoring Operations",
-    homePath:
-      "/mentor-department/dashboard",
+    title: "Advisory Department",
+    subtitle: "Advisory Operations",
+    homePath: "/mentor-department/dashboard",
   },
 
   mentor: {
-    title: "Mentor Portal",
+    title: "Advisor Portal",
     subtitle: "Student Development",
     homePath: "/mentor/dashboard",
   },
 };
 
-export default function MentoringLayout({
-  children,
-}) {
+export default function MentoringLayout({ children }) {
   const navigate = useNavigate();
+  const { profile, role, signOut } = useAuth();
 
-  const {
-    profile,
-    role,
-    signOut,
-  } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
-  const [menuOpen, setMenuOpen] =
-    useState(false);
-
-  const [signingOut, setSigningOut] =
-    useState(false);
-
-  const portal =
-    portalDetails[role] ||
-    portalDetails.mentor;
-
-  const navigation =
-    navigationByRole[role] || [];
+  const portal = portalDetails[role] || portalDetails.mentor;
+  const navigation = navigationByRole[role] || [];
 
   async function handleSignOut() {
     setSigningOut(true);
 
     try {
       await signOut();
-
-      navigate("/login", {
-        replace: true,
-      });
+      navigate("/login", { replace: true });
     } catch (error) {
-      console.error(
-        "Unable to sign out:",
-        error,
-      );
-
+      console.error("Unable to sign out:", error);
       setSigningOut(false);
     }
   }
 
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <MentoringSidebar
+      <AdvisorySidebar
         open={menuOpen}
-        onClose={() =>
-          setMenuOpen(false)
-        }
+        onClose={closeMenu}
         profile={profile}
+        role={role}
         portal={portal}
         navigation={navigation}
         signingOut={signingOut}
@@ -158,20 +140,17 @@ export default function MentoringLayout({
         <button
           type="button"
           aria-label="Close navigation"
-          onClick={() =>
-            setMenuOpen(false)
-          }
+          onClick={closeMenu}
           className="fixed inset-0 z-30 bg-slate-950/50 lg:hidden"
         />
       )}
 
       <div className="lg:pl-72">
-        <MentoringHeader
+        <AdvisoryHeader
           profile={profile}
+          role={role}
           portal={portal}
-          onOpenMenu={() =>
-            setMenuOpen(true)
-          }
+          onOpenMenu={() => setMenuOpen(true)}
         />
 
         <div className="min-h-[calc(100vh-4.5rem)]">
@@ -182,10 +161,11 @@ export default function MentoringLayout({
   );
 }
 
-function MentoringSidebar({
+function AdvisorySidebar({
   open,
   onClose,
   profile,
+  role,
   portal,
   navigation,
   signingOut,
@@ -194,9 +174,7 @@ function MentoringSidebar({
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-indigo-900 bg-slate-950 text-white transition-transform duration-200 lg:translate-x-0 ${
-        open
-          ? "translate-x-0"
-          : "-translate-x-full"
+        open ? "translate-x-0" : "-translate-x-full"
       }`}
     >
       <div className="flex h-[4.5rem] items-center justify-between border-b border-slate-800 px-5">
@@ -205,15 +183,12 @@ function MentoringSidebar({
           onClick={onClose}
           className="flex items-center gap-3"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white font-bold text-slate-950">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white font-bold text-slate-950">
             LTC
           </div>
 
           <div>
-            <p className="font-bold">
-              {portal.title}
-            </p>
-
+            <p className="font-bold">{portal.title}</p>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300">
               {portal.subtitle}
             </p>
@@ -232,29 +207,25 @@ function MentoringSidebar({
 
       <div className="border-b border-slate-800 p-5">
         <div className="flex items-center gap-3">
-          <ProfilePhoto
-            profile={profile}
-            size="sidebar"
-          />
+          <ProfilePhoto profile={profile} size="sidebar" />
 
           <div className="min-w-0">
             <p className="truncate font-semibold">
-              {profile?.full_name ||
-                portal.title}
+              {profile?.full_name || portal.title}
             </p>
-
             <p className="mt-1 truncate text-xs text-slate-400">
-              {formatRole(
-                profile?.role,
-              )}
+              {formatRole(role)}
             </p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-4 py-5">
+      <nav
+        aria-label="Advisory navigation"
+        className="flex-1 overflow-y-auto px-4 py-5"
+      >
         <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Mentoring
+          Advisory
         </p>
 
         <div className="mt-3 space-y-1">
@@ -269,10 +240,7 @@ function MentoringSidebar({
                   className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-3 text-sm text-slate-500"
                 >
                   <Icon className="h-5 w-5" />
-
-                  <span className="flex-1">
-                    {item.label}
-                  </span>
+                  <span className="flex-1">{item.label}</span>
 
                   <span className="rounded-full bg-slate-800 px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-slate-400">
                     Soon
@@ -286,9 +254,7 @@ function MentoringSidebar({
                 key={item.path}
                 to={item.path}
                 onClick={onClose}
-                className={({
-                  isActive,
-                }) =>
+                className={({ isActive }) =>
                   `flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition ${
                     isActive
                       ? "bg-white text-slate-950"
@@ -297,10 +263,7 @@ function MentoringSidebar({
                 }
               >
                 <Icon className="h-5 w-5" />
-
-                <span>
-                  {item.label}
-                </span>
+                <span>{item.label}</span>
               </NavLink>
             );
           })}
@@ -315,18 +278,16 @@ function MentoringSidebar({
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700 px-4 py-3 text-sm font-semibold transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <LogOut className="h-4 w-4" />
-
-          {signingOut
-            ? "Signing out..."
-            : "Sign Out"}
+          {signingOut ? "Signing out..." : "Sign Out"}
         </button>
       </div>
     </aside>
   );
 }
 
-function MentoringHeader({
+function AdvisoryHeader({
   profile,
+  role,
   portal,
   onOpenMenu,
 }) {
@@ -346,7 +307,6 @@ function MentoringHeader({
           <p className="text-sm text-slate-500">
             LTC Pioneer Programme
           </p>
-
           <p className="font-semibold text-slate-950">
             {portal.title}
           </p>
@@ -360,40 +320,26 @@ function MentoringHeader({
           className="relative rounded-lg border border-slate-200 p-2 text-slate-600"
         >
           <Bell className="h-5 w-5" />
-
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-500" />
         </button>
 
         <div className="hidden text-right sm:block">
           <p className="max-w-48 truncate text-sm font-semibold text-slate-800">
-            {profile?.full_name ||
-              portal.title}
+            {profile?.full_name || portal.title}
           </p>
-
           <p className="text-xs text-slate-500">
-            {formatRole(
-              profile?.role,
-            )}
+            {formatRole(role)}
           </p>
         </div>
 
-        <ProfilePhoto
-          profile={profile}
-          size="header"
-        />
+        <ProfilePhoto profile={profile} size="header" />
       </div>
     </header>
   );
 }
 
-function ProfilePhoto({
-  profile,
-  size,
-}) {
-  const sizeClass =
-    size === "sidebar"
-      ? "h-11 w-11"
-      : "h-10 w-10";
+function ProfilePhoto({ profile, size }) {
+  const sizeClass = size === "sidebar" ? "h-11 w-11" : "h-10 w-10";
 
   if (profile?.profile_photo_url) {
     return (
@@ -409,39 +355,37 @@ function ProfilePhoto({
     <div
       className={`${sizeClass} flex shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800`}
     >
-      {getInitials(
-        profile?.full_name,
-      )}
+      {getInitials(profile?.full_name)}
     </div>
   );
 }
 
 function getInitials(fullName) {
-  if (!fullName) {
-    return "LTC";
-  }
+  if (!fullName) return "LTC";
 
   return fullName
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((name) =>
-      name.charAt(0).toUpperCase(),
-    )
+    .map((name) => name.charAt(0).toUpperCase())
     .join("");
 }
 
 function formatRole(role) {
-  if (!role) {
-    return "";
-  }
+  const labels = {
+    mentor_department: "Advisory Department",
+    mentor: "Advisor",
+    student: "Student",
+    super_admin: "Super Admin",
+  };
 
-  return String(role)
-    .split("_")
-    .map(
-      (word) =>
-        word.charAt(0).toUpperCase() +
-        word.slice(1),
-    )
-    .join(" ");
+  if (!role) return "";
+
+  return (
+    labels[role] ||
+    String(role)
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  );
 }

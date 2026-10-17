@@ -2,62 +2,14 @@ import { useState } from "react";
 
 import StudentLayout from "../../layouts/StudentLayout";
 import { useStudentDailySchedule } from "../../hooks/useStudentDailySchedule";
+import { useDevotions } from "../../hooks/useDevotions";
 
 const ACTIVITY_LABELS = {
   class: "Class",
   learning_experience: "Learning experience",
   service: "Service duty",
+  devotion: "Devotion",
 };
-
-function getTodayInNigeria() {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Africa/Lagos",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const value = (type) =>
-    parts.find((part) => part.type === type)?.value;
-
-  return `${value("year")}-${value("month")}-${value("day")}`;
-}
-
-function formatTime(value) {
-  if (!value) return "Time not provided";
-
-  const [hours, minutes] = String(value).split(":");
-  const hour = Number(hours);
-
-  return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? "PM" : "AM"}`;
-}
-
-function formatDate(value) {
-  return new Intl.DateTimeFormat("en-NG", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${value}T12:00:00Z`));
-}
-
-function formatLabel(value) {
-  return String(value || "Not provided").replaceAll("_", " ");
-}
-
-function getClassroomUrl(value) {
-  try {
-    const url = new URL(value);
-
-    return url.protocol === "https:" &&
-      url.hostname === "classroom.google.com"
-      ? url.href
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 export default function StudentDailySchedulePage() {
   const [date, setDate] = useState(getTodayInNigeria);
@@ -70,11 +22,50 @@ export default function StudentDailySchedulePage() {
     refreshSchedule,
   } = useStudentDailySchedule(date);
 
-  const scheduledCount = activities.filter(
+  const {
+    devotions,
+    devotionsLoading,
+    devotionsFetching,
+    devotionsError,
+    refreshDevotions,
+  } = useDevotions(date, date);
+
+  const loading = scheduleLoading || devotionsLoading;
+  const fetching = scheduleFetching || devotionsFetching;
+  const hasError = Boolean(scheduleError || devotionsError);
+
+  const combinedActivities = [
+    ...activities.map((activity) => ({
+      ...activity,
+      listKey: `activity:${activity.id}`,
+    })),
+    ...devotions.map((devotion) => ({
+      ...devotion,
+      listKey: `devotion:${devotion.id}`,
+      parent_title: "Advisory Department",
+      delivery_mode: devotion.location ? "in_person" : "online",
+    })),
+  ].sort(
+    (a, b) =>
+      String(a.start_time || "99:99").localeCompare(
+        String(b.start_time || "99:99"),
+      ) ||
+      String(a.title || "").localeCompare(String(b.title || "")) ||
+      a.listKey.localeCompare(b.listKey),
+  );
+
+  const scheduledCount = combinedActivities.filter(
     (activity) =>
       activity.status !== "cancelled" &&
       activity.status !== "completed",
   ).length;
+
+  function refreshAll() {
+    void Promise.allSettled([
+      refreshSchedule(),
+      refreshDevotions(),
+    ]);
+  }
 
   return (
     <StudentLayout>
@@ -90,8 +81,8 @@ export default function StudentDailySchedulePage() {
             </h1>
 
             <p className="mt-3 max-w-2xl leading-7 text-slate-600">
-              View your classes, learning experiences and assigned service
-              duties. All times are shown in Nigeria time (WAT).
+              View your classes, learning experiences, assigned service
+              duties and devotions. All times are Nigeria time (WAT).
             </p>
           </header>
 
@@ -124,11 +115,11 @@ export default function StudentDailySchedulePage() {
 
             <button
               type="button"
-              onClick={() => refreshSchedule()}
-              disabled={scheduleFetching}
+              onClick={refreshAll}
+              disabled={fetching}
               className="rounded-lg bg-blue-950 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {scheduleFetching ? "Refreshing..." : "Refresh"}
+              {fetching ? "Refreshing..." : "Refresh"}
             </button>
           </section>
 
@@ -137,7 +128,7 @@ export default function StudentDailySchedulePage() {
               {formatDate(date)}
             </h2>
 
-            {!scheduleLoading && !scheduleError && (
+            {!loading && !hasError && (
               <p className="text-sm text-slate-500">
                 {scheduledCount} scheduled{" "}
                 {scheduledCount === 1 ? "activity" : "activities"}
@@ -146,49 +137,53 @@ export default function StudentDailySchedulePage() {
           </div>
 
           {scheduleError && (
-            <div
-              role="alert"
-              className="mt-5 rounded-xl border border-red-200 bg-red-50 p-5 text-red-700"
-            >
-              <p>
-                {scheduleError.message ||
-                  "Your schedule could not be loaded."}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => refreshSchedule()}
-                disabled={scheduleFetching}
-                className="mt-3 text-sm font-semibold underline disabled:opacity-60"
-              >
-                Try again
-              </button>
-            </div>
+            <ErrorMessage
+              title="Classes, learning experiences and service duties could not be refreshed."
+              message={scheduleError.message}
+            />
           )}
 
-          {scheduleLoading ? (
+          {devotionsError && (
+            <ErrorMessage
+              title="Devotions could not be refreshed."
+              message={devotionsError.message}
+            />
+          )}
+
+          {hasError && (
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Your schedule may be incomplete or contain previously loaded
+              information. Use Refresh to try again.
+            </p>
+          )}
+
+          {loading && (
             <p
               role="status"
-              className="mt-5 rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500"
+              className="mt-5 rounded-xl border border-slate-200 bg-white p-5 text-center text-slate-500"
             >
               Loading your schedule...
             </p>
-          ) : activities.length > 0 ? (
+          )}
+
+          {combinedActivities.length > 0 ? (
             <div className="mt-5 space-y-4">
-              {activities.map((activity) => (
-                <ScheduleCard key={activity.id} activity={activity} />
+              {combinedActivities.map((activity) => (
+                <ScheduleCard
+                  key={activity.listKey}
+                  activity={activity}
+                />
               ))}
             </div>
-          ) : !scheduleError ? (
+          ) : !loading && !hasError ? (
             <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center">
               <h3 className="font-semibold text-slate-800">
                 No scheduled activities for this day
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Dated class sessions, learning experience sessions and
-                service duties assigned to you will appear here when
-                scheduled.
+                Dated classes, learning experiences, assigned service
+                duties and devotions will appear here when scheduled.
               </p>
             </div>
           ) : null}
@@ -202,6 +197,14 @@ function ScheduleCard({ activity }) {
   const cancelled = activity.status === "cancelled";
   const completed = activity.status === "completed";
   const isService = activity.activity_type === "service";
+  const isDevotion = activity.activity_type === "devotion";
+
+  const classroomUrl = getClassroomUrl(
+    activity.google_classroom_url,
+  );
+
+  const meetingUrl = getHttpsUrl(activity.meeting_url);
+  const recordingUrl = getHttpsUrl(activity.recording_url);
 
   const statusTone = cancelled
     ? "bg-red-100 text-red-700"
@@ -209,9 +212,11 @@ function ScheduleCard({ activity }) {
       ? "bg-green-100 text-green-700"
       : "bg-blue-100 text-blue-700";
 
-  const classroomUrl = getClassroomUrl(
-    activity.google_classroom_url,
-  );
+  const activityTone = isDevotion
+    ? "bg-purple-100 text-purple-800"
+    : isService
+      ? "bg-amber-100 text-amber-800"
+      : "bg-slate-100 text-slate-600";
 
   return (
     <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -220,11 +225,9 @@ function ScheduleCard({ activity }) {
           <p className="text-lg font-bold text-blue-950">
             {formatTime(activity.start_time)}
           </p>
-
           <p className="mt-1 text-sm text-slate-500">
             to {formatTime(activity.end_time)}
           </p>
-
           <p className="mt-2 text-xs font-medium text-slate-400">
             WAT · Nigeria
           </p>
@@ -233,11 +236,7 @@ function ScheduleCard({ activity }) {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                isService
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-slate-100 text-slate-600"
-              }`}
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${activityTone}`}
             >
               {ACTIVITY_LABELS[activity.activity_type] || "Activity"}
             </span>
@@ -253,9 +252,11 @@ function ScheduleCard({ activity }) {
             {activity.title || "Scheduled activity"}
           </h3>
 
-          <p className="mt-1 text-sm font-medium text-slate-600">
-            {activity.parent_title}
-          </p>
+          {activity.parent_title && (
+            <p className="mt-1 text-sm font-medium text-slate-600">
+              {activity.parent_title}
+            </p>
+          )}
 
           {activity.topic && (
             <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
@@ -269,22 +270,69 @@ function ScheduleCard({ activity }) {
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <Detail
               label="Location"
-              value={activity.location}
+              value={
+                activity.location ||
+                (isDevotion && (meetingUrl || recordingUrl)
+                  ? "Online / linked content"
+                  : null)
+              }
             />
 
-            <Detail
-              label="Delivery mode"
-              value={formatLabel(activity.delivery_mode)}
-              capitalize
-            />
+            {isDevotion ? (
+              <Detail
+                label="Guest Speaker(s)"
+                value={activity.speaker}
+              />
+            ) : (
+              <Detail
+                label="Delivery mode"
+                value={formatLabel(activity.delivery_mode)}
+                capitalize
+              />
+            )}
           </dl>
 
           {isService && <ServiceDetails activity={activity} />}
+
+          {isDevotion && activity.description && (
+            <div className="mt-5 rounded-lg border border-purple-200 bg-purple-50 p-4">
+              <h4 className="text-sm font-semibold text-purple-900">
+                Description / Instructions
+              </h4>
+              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">
+                {activity.description}
+              </p>
+            </div>
+          )}
 
           {cancelled ? (
             <p className="mt-4 text-sm font-medium text-red-700">
               This activity has been cancelled.
             </p>
+          ) : isDevotion ? (
+            <div className="mt-5 flex flex-wrap gap-3">
+              {!completed && meetingUrl && (
+                <a
+                  href={meetingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-blue-950 px-4 py-2 text-sm font-semibold text-white"
+                >
+                  Join Live Meeting
+                </a>
+              )}
+
+              {recordingUrl && (
+                <a
+                  href={recordingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-900"
+                >
+                  Recording / Conference Talk
+                </a>
+              )}
+            </div>
           ) : (
             !isService &&
             (classroomUrl || activity.google_classroom_code) && (
@@ -325,12 +373,10 @@ function ServiceDetails({ activity }) {
           label="Scheduled hours"
           value={activity.scheduled_hours}
         />
-
         <Detail
           label="Team"
           value={activity.team_name || "Not assigned"}
         />
-
         <Detail
           label="Responsibility level"
           value={formatLabel(activity.responsibility_level)}
@@ -342,12 +388,10 @@ function ServiceDetails({ activity }) {
         title="Task instructions"
         value={activity.task_description}
       />
-
       <ServiceInstruction
         title="Expected outcome"
         value={activity.expected_outcome}
       />
-
       <ServiceInstruction
         title="Safety instructions"
         value={activity.safety_requirements}
@@ -371,7 +415,7 @@ function Detail({ label, value, capitalize = false }) {
     <div>
       <dt className="text-xs text-slate-500">{label}</dt>
       <dd
-        className={`mt-1 whitespace-pre-wrap text-sm font-medium text-slate-800 ${
+        className={`mt-1 whitespace-pre-wrap break-words text-sm font-medium text-slate-800 ${
           capitalize ? "capitalize" : ""
         }`}
       >
@@ -394,4 +438,97 @@ function ServiceInstruction({ title, value }) {
       </p>
     </div>
   );
+}
+
+function ErrorMessage({ title, message }) {
+  return (
+    <div
+      role="alert"
+      className="mt-5 rounded-xl border border-red-200 bg-red-50 p-5 text-red-700"
+    >
+      <p className="font-semibold">{title}</p>
+      {message && <p className="mt-2 text-sm">{message}</p>}
+    </div>
+  );
+}
+
+function getTodayInNigeria() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const value = (type) =>
+    parts.find((part) => part.type === type)?.value;
+
+  return `${value("year")}-${value("month")}-${value("day")}`;
+}
+
+function formatTime(value) {
+  if (!value) return "Time not provided";
+
+  const [hours, minutes] = String(value).split(":");
+  const hour = Number(hours);
+  const minute = Number(minutes);
+
+  if (
+    !Number.isInteger(hour) ||
+    hour < 0 ||
+    hour > 23 ||
+    minutes === undefined ||
+    !Number.isInteger(minute) ||
+    minute < 0 ||
+    minute > 59
+  ) {
+    return "Time not provided";
+  }
+
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${
+    hour >= 12 ? "PM" : "AM"
+  }`;
+}
+
+function formatDate(value) {
+  const date = new Date(`${value}T12:00:00+01:00`);
+
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+
+  return new Intl.DateTimeFormat("en-NG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Lagos",
+  }).format(date);
+}
+
+function formatLabel(value) {
+  return String(value || "Not provided").replaceAll("_", " ");
+}
+
+function getHttpsUrl(value) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function getClassroomUrl(value) {
+  const safeUrl = getHttpsUrl(value);
+
+  if (!safeUrl) return null;
+
+  const url = new URL(safeUrl);
+
+  return url.hostname === "classroom.google.com"
+    ? url.href
+    : null;
 }

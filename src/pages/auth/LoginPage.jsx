@@ -9,8 +9,8 @@ const ROLE_LABELS = {
   facilitator: "Facilitator",
   coach: "Coach",
   supervisor: "Supervisor / Project Coordinator",
-  mentor: "Mentor",
-  mentor_department: "Mentor Department",
+  mentor: "Advisor",
+  mentor_department: "Advisory Department",
   super_admin: "Super Admin",
   administrator: "Administrator",
   curriculum_admin: "Curriculum Admin",
@@ -148,7 +148,7 @@ export default function LoginPage() {
 
             <p className="mt-5 leading-8 text-blue-100">
               Sign in and choose your role to access your learning,
-              teaching, coaching, mentoring or service responsibilities.
+              teaching, coaching, advisory or service responsibilities.
             </p>
           </div>
 
