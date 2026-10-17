@@ -1,653 +1,376 @@
-import {
-  AlertTriangle,
-  ClipboardCheck,
-  Clock3,
-  UserRoundCheck,
-  Users,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
-import {
-  useMentorDepartment,
-} from "../../hooks/useMentorDepartment";
-
+import { useAdvisoryCouples } from "../../hooks/useAdvisoryCouples";
+import { useMentorDepartment } from "../../hooks/useMentorDepartment";
 import MentoringLayout from "../../layouts/MentoringLayout";
 
 export default function MentorDepartmentDashboardPage() {
   const {
-    mentorDepartmentDashboard,
-    mentorDepartmentLoading,
-    mentorDepartmentError,
+    mentorDepartmentDashboard: dashboard,
+    mentorDepartmentLoading: loading,
+    mentorDepartmentFetching: fetching,
+    mentorDepartmentError: error,
+    refreshMentorDepartmentDashboard: refreshDashboard,
   } = useMentorDepartment();
 
-  if (mentorDepartmentLoading) {
-    return (
-      <MentoringLayout>
-        <PageMessage message="Loading Advisory Department dashboard..." />
-      </MentoringLayout>
-    );
-  }
-
-  if (
-    mentorDepartmentError ||
-    !mentorDepartmentDashboard
-  ) {
-    return (
-      <MentoringLayout>
-        <PageMessage
-          error
-          message={
-            mentorDepartmentError?.message ||
-            "The Advisory Department dashboard could not be loaded."
-          }
-        />
-      </MentoringLayout>
-    );
-  }
-
   const {
-    summary,
-    mentorWorkload,
-    recentReports,
-  } = mentorDepartmentDashboard;
+    couples,
+    loading: couplesLoading,
+    fetching: couplesFetching,
+    error: couplesError,
+    refresh: refreshCouples,
+  } = useAdvisoryCouples();
+
+  const summary = dashboard?.summary || {};
+  const reports = dashboard?.recentReports || [];
+  const refreshing = fetching || couplesFetching;
+
+  async function refreshAll() {
+    await Promise.allSettled([
+      refreshDashboard(),
+      refreshCouples(),
+    ]);
+  }
 
   return (
     <MentoringLayout>
       <main className="p-5 md:p-8">
-        <div className="mx-auto max-w-7xl">
-          <header>
-            <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
-              Advisory Operations
-            </p>
+        <div className="mx-auto max-w-7xl space-y-7">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wider text-amber-600">
+                Advisory Operations
+              </p>
 
-            <h1 className="mt-2 text-3xl font-bold text-slate-950 md:text-4xl">
-              Advisory Department Dashboard
-            </h1>
+              <h1 className="mt-2 text-3xl font-bold text-blue-950">
+                Advisory Department Dashboard
+              </h1>
 
-            <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-              Manage advisor capacity,
-              student assignments, report
-              review and required follow-up.
-            </p>
+              <p className="mt-3 max-w-3xl leading-7 text-slate-600">
+                Coordinate advisory couples, student assignments,
+                report reviews and follow-up.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={refreshAll}
+              disabled={refreshing}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 disabled:opacity-60"
+            >
+              <RefreshCw
+                size={18}
+                aria-hidden="true"
+                className={refreshing ? "animate-spin" : ""}
+              />
+              Refresh
+            </button>
           </header>
 
-          <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard
-              label="Active Advisors"
-              value={
-                summary.activeMentors
-              }
-              detail={`${summary.availableMentors} available`}
-              icon={Users}
-              tone="blue"
-            />
-
-            <SummaryCard
-              label="Active Assignments"
-              value={
-                summary.activeAssignments
-              }
-              detail="Current advisory relationships"
-              icon={UserRoundCheck}
-              tone="green"
-            />
-
-            <SummaryCard
-              label="Awaiting Assignment"
-              value={
-                summary
-                  .studentsAwaitingAssignment
-              }
-              detail="Students requiring advisors"
-              icon={Clock3}
-              tone="amber"
-            />
-
-            <SummaryCard
-              label="Reports to Review"
-              value={
-                summary
-                  .reportsAwaitingReview
-              }
-              detail={`${summary.urgentReports} urgent`}
-              icon={ClipboardCheck}
-              tone={
-                summary.urgentReports > 0
-                  ? "red"
-                  : "purple"
-              }
-            />
-          </section>
-
-          <section className="mt-5 grid gap-5 sm:grid-cols-3">
-            <StatusCard
-              label="Open Follow-Ups"
-              value={
-                summary.openFollowUps
-              }
-            />
-
-            <StatusCard
-              label="Overdue Follow-Ups"
-              value={
-                summary.overdueFollowUps
-              }
-              warning={
-                summary.overdueFollowUps >
-                0
-              }
-            />
-
-            <StatusCard
-              label="Overdue Check-Ins"
-              value={
-                summary.overdueCheckIns
-              }
-              warning={
-                summary.overdueCheckIns >
-                0
-              }
-            />
-          </section>
-
-          <div className="mt-8 grid gap-8 xl:grid-cols-[1.25fr_0.75fr]">
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <SectionHeader
-                title="Advisor Workload"
-                description="Current advisor capacity, assignments and overdue actions."
-              />
-
-              {mentorWorkload.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[760px]">
-                    <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
-                      <tr>
-                        <th className="px-5 py-4">
-                          Advisor
-                        </th>
-
-                        <th className="px-5 py-4">
-                          Availability
-                        </th>
-
-                        <th className="px-5 py-4">
-                          Workload
-                        </th>
-
-                        <th className="px-5 py-4">
-                          Overdue
-                        </th>
-
-                        <th className="px-5 py-4">
-                          Follow-Ups
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-slate-200">
-                      {mentorWorkload.map(
-                        (mentor) => (
-                          <MentorRow
-                            key={
-                              mentor.mentor_profile_id
-                            }
-                            mentor={mentor}
-                          />
-                        ),
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <EmptyState
-                  title="No advisors available"
-                  description="Appointed advisors and their workload will appear here."
-                />
+          {loading && !dashboard ? (
+            <Message>Loading department dashboard...</Message>
+          ) : !dashboard ? (
+            <Message error>
+              {error?.message || "The dashboard could not be loaded."}
+            </Message>
+          ) : (
+            <>
+              {error && (
+                <Message error>
+                  Dashboard refresh failed. Previously loaded totals
+                  and reports are shown.
+                </Message>
               )}
-            </section>
 
-            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <SectionHeader
-                title="Priority Alerts"
-                description="Items requiring department attention."
-              />
-
-              <div className="space-y-4 p-5">
-                <AlertItem
-                  label="Urgent reports"
-                  value={
-                    summary.urgentReports
-                  }
-                  urgent={
-                    summary.urgentReports >
-                    0
-                  }
+              <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <Metric
+                  label="Active Advisors"
+                  value={summary.activeMentors}
+                  detail={`${summary.availableMentors} available`}
                 />
-
-                <AlertItem
-                  label="Overdue follow-ups"
-                  value={
-                    summary
-                      .overdueFollowUps
-                  }
-                  urgent={
-                    summary
-                      .overdueFollowUps >
-                    0
-                  }
+                <Metric
+                  label="Active Student Assignments"
+                  value={summary.activeAssignments}
+                  detail="Includes couple and earlier individual assignments"
                 />
-
-                <AlertItem
-                  label="Overdue check-ins"
-                  value={
-                    summary
-                      .overdueCheckIns
-                  }
-                  urgent={
-                    summary
-                      .overdueCheckIns >
-                    0
-                  }
+                <Metric
+                  label="Awaiting Assignment"
+                  value={summary.studentsAwaitingAssignment}
+                  detail="Students awaiting Advisors"
                 />
-
-                <AlertItem
-                  label="Students awaiting advisors"
-                  value={
-                    summary
-                      .studentsAwaitingAssignment
-                  }
+                <Metric
+                  label="Reports to Review"
+                  value={summary.reportsAwaitingReview}
+                  detail={`${summary.urgentReports} urgent reports`}
+                  warning={summary.urgentReports > 0}
                 />
-              </div>
-            </section>
-          </div>
+              </section>
 
-          <section className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <section className="grid gap-4 sm:grid-cols-3">
+                <Metric
+                  label="Open Follow-Ups"
+                  value={summary.openFollowUps}
+                />
+                <Metric
+                  label="Overdue Follow-Ups"
+                  value={summary.overdueFollowUps}
+                  warning={summary.overdueFollowUps > 0}
+                />
+                <Metric
+                  label="Overdue Check-Ins"
+                  value={summary.overdueCheckIns}
+                  warning={summary.overdueCheckIns > 0}
+                />
+              </section>
+            </>
+          )}
+
+          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <SectionHeader
-              title="Recent Advisor Reports"
-              description="Latest reports submitted by assigned advisors."
+              title="Advisory Couple Workload"
+              description="Each couple has one shared student capacity. Earlier individual assignments are excluded from these figures."
             />
 
-            {recentReports.length > 0 ? (
-              <div className="divide-y divide-slate-200">
-                {recentReports.map(
-                  (report) => (
-                    <ReportRow
-                      key={
-                        report.report_id
-                      }
-                      report={report}
-                    />
-                  ),
-                )}
+            {couplesError ? (
+              <div className="p-5">
+                <Message error>
+                  {couplesError.message ||
+                    "Couple workload could not be loaded."}
+                  {" "}Use Refresh to try again.
+                </Message>
               </div>
+            ) : couplesLoading ? (
+              <div className="p-5">
+                <Message>Loading couple workload...</Message>
+              </div>
+            ) : couples.length === 0 ? (
+              <EmptyState message="Create advisory couples from Advisor Assignments to see their workload here." />
             ) : (
-              <EmptyState
-                title="No advisory reports"
-                description="Submitted advisory reports will appear here for department review."
-              />
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left">
+                  <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th scope="col" className="px-5 py-4">
+                        Advisory Couple
+                      </th>
+                      <th scope="col" className="px-5 py-4">
+                        Status
+                      </th>
+                      <th scope="col" className="px-5 py-4">
+                        Shared Workload
+                      </th>
+                      <th scope="col" className="px-5 py-4">
+                        Remaining Spaces
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-slate-200">
+                    {couples.map((couple) => (
+                      <CoupleRow key={couple.id} couple={couple} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
+
+          {dashboard && (
+            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <SectionHeader
+                title="Recent Advisory Reports"
+                description="Shared advisory responsibility and the individual who submitted each report."
+              />
+
+              {reports.length === 0 ? (
+                <EmptyState message="Submitted advisory reports will appear here." />
+              ) : (
+                <div className="divide-y divide-slate-200">
+                  {reports.map((report) => (
+                    <ReportRow
+                      key={report.report_id}
+                      report={report}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       </main>
     </MentoringLayout>
   );
 }
 
-function SummaryCard({
-  label,
-  value,
-  detail,
-  icon: Icon,
-  tone,
-}) {
-  const tones = {
-    blue:
-      "border-blue-200 bg-blue-50 text-blue-900",
-    green:
-      "border-green-200 bg-green-50 text-green-900",
-    amber:
-      "border-amber-200 bg-amber-50 text-amber-900",
-    purple:
-      "border-purple-200 bg-purple-50 text-purple-900",
-    red:
-      "border-red-200 bg-red-50 text-red-900",
-  };
+function CoupleRow({ couple }) {
+  const full = couple.active_student_count >= couple.max_active_students;
 
-  return (
-    <article
-      className={`rounded-xl border p-5 shadow-sm ${
-        tones[tone] ||
-        tones.blue
-      }`}
-    >
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-sm opacity-75">
-          {label}
-        </p>
+  const status =
+    couple.status !== "active"
+      ? "Inactive"
+      : couple.ready_for_assignment
+        ? "Accepting students"
+        : full
+          ? "At capacity"
+          : "Needs review";
 
-        <Icon className="h-5 w-5 opacity-70" />
-      </div>
-
-      <p className="mt-3 text-3xl font-bold">
-        {value}
-      </p>
-
-      <p className="mt-2 text-xs opacity-75">
-        {detail}
-      </p>
-    </article>
-  );
-}
-
-function StatusCard({
-  label,
-  value,
-  warning = false,
-}) {
-  return (
-    <article
-      className={`rounded-xl border bg-white p-5 shadow-sm ${
-        warning
-          ? "border-red-200"
-          : "border-slate-200"
-      }`}
-    >
-      <p className="text-sm text-slate-500">
-        {label}
-      </p>
-
-      <p
-        className={`mt-2 text-2xl font-bold ${
-          warning
-            ? "text-red-700"
-            : "text-slate-900"
-        }`}
-      >
-        {value}
-      </p>
-    </article>
-  );
-}
-
-function MentorRow({ mentor }) {
   return (
     <tr className="text-sm">
-      <td className="px-5 py-4">
-        <div className="flex items-center gap-3">
-          <ProfilePhoto
-            url={
-              mentor.profile_photo_url
-            }
-            name={mentor.full_name}
-          />
+      <td className="px-5 py-5">
+        <p className="font-semibold text-blue-950">
+          {couple.members
+            .map((member) => member.full_name)
+            .join(" & ") || couple.display_name}
+        </p>
 
-          <div>
-            <p className="font-semibold text-slate-900">
-              {mentor.full_name ||
-                "Unnamed advisor"}
-            </p>
+        <p className="mt-2 text-xs text-slate-500">
+          {couple.display_name}
+        </p>
 
-            <p className="mt-1 text-xs text-slate-500">
-              {mentor.specialization ||
-                "Specialization not added"}
-            </p>
-          </div>
-        </div>
+        {couple.members.some(
+          (member) =>
+            member.account_status !== "active" ||
+            !["available", "limited"].includes(
+              member.availability_status,
+            ),
+        ) && (
+          <p className="mt-2 text-xs text-amber-700">
+            One or more Advisors are currently unavailable.
+          </p>
+        )}
       </td>
 
-      <td className="px-5 py-4">
-        <Badge
-          value={
-            mentor.availability_status
-          }
-        />
+      <td className="px-5 py-5">
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          {status}
+        </span>
       </td>
 
-      <td className="px-5 py-4 text-slate-700">
-        {mentor.active_mentees}/
-        {mentor.max_active_mentees}
+      <td className="px-5 py-5 font-bold text-blue-950">
+        {couple.active_student_count}/{couple.max_active_students}
       </td>
 
-      <td className="px-5 py-4">
-        <Count
-          value={
-            mentor.overdue_check_ins
-          }
-        />
-      </td>
-
-      <td className="px-5 py-4">
-        <Count
-          value={
-            mentor.open_follow_ups
-          }
-        />
+      <td className="px-5 py-5 text-slate-700">
+        {couple.remaining_capacity}
       </td>
     </tr>
   );
 }
 
 function ReportRow({ report }) {
-  return (
-    <article className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="font-semibold text-slate-900">
-            {report.student_name}
-          </p>
+  const isCouple = Boolean(report.advisory_couple_id);
 
-          <Badge
-            value={
-              report.attention_level
-            }
-          />
-        </div>
+  return (
+    <article className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h3 className="font-bold text-blue-950">
+          {report.student_name}
+        </h3>
+
+        <p className="mt-2 text-sm text-slate-500">
+          {formatLabel(report.report_type)}
+          {" · "}
+          {formatLabel(report.attention_level)}
+        </p>
+
+        <p className="mt-3 break-words text-sm text-slate-700">
+          <strong>{isCouple ? "Advisory couple: " : "Advisor: "}</strong>
+          {isCouple
+            ? report.advisor_names ||
+              report.couple_name ||
+              "Details unavailable"
+            : report.mentor_name || "Details unavailable"}
+        </p>
+
+        {isCouple && report.couple_name && report.advisor_names && (
+          <p className="mt-1 text-xs text-slate-500">
+            {report.couple_name}
+          </p>
+        )}
 
         <p className="mt-2 text-sm text-slate-600">
-          {formatValue(
-            report.report_type,
-          )}
-          {" · "}
-          Advisor:{" "}
-          {report.mentor_name}
+          <strong>Submitted by: </strong>
+          {report.submitted_by_name || "Name unavailable"}
         </p>
       </div>
 
-      <div className="text-left md:text-right">
-        <Badge
-          value={report.status}
-        />
-
-        <p className="mt-2 text-xs text-slate-500">
-          {formatDate(
-            report.submitted_at,
-          )}
+      <div className="shrink-0 sm:text-right">
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          {formatLabel(report.status)}
+        </span>
+        <p className="mt-3 text-xs text-slate-500">
+          {formatDate(report.submitted_at)}
         </p>
       </div>
     </article>
   );
 }
 
-function AlertItem({
-  label,
-  value,
-  urgent = false,
-}) {
+function Metric({ label, value, detail, warning = false }) {
   return (
-    <div
-      className={`flex items-center justify-between rounded-lg border p-4 ${
-        urgent
-          ? "border-red-200 bg-red-50"
-          : "border-slate-200 bg-slate-50"
+    <article
+      className={`rounded-xl border p-5 ${
+        warning
+          ? "border-red-200 bg-red-50 text-red-800"
+          : "border-blue-200 bg-blue-50 text-blue-900"
       }`}
     >
-      <div className="flex items-center gap-3">
-        <AlertTriangle
-          className={`h-5 w-5 ${
-            urgent
-              ? "text-red-600"
-              : "text-slate-400"
-          }`}
-        />
-
-        <p className="text-sm font-medium text-slate-700">
-          {label}
-        </p>
-      </div>
-
-      <span
-        className={`font-bold ${
-          urgent
-            ? "text-red-700"
-            : "text-slate-900"
-        }`}
-      >
-        {value}
-      </span>
-    </div>
+      <p className="text-sm font-semibold">{label}</p>
+      <p className="mt-3 text-3xl font-bold">{value ?? 0}</p>
+      {detail && <p className="mt-3 text-xs leading-5">{detail}</p>}
+    </article>
   );
 }
 
-function SectionHeader({
-  title,
-  description,
-}) {
+function SectionHeader({ title, description }) {
   return (
     <header className="border-b border-slate-200 p-5">
-      <h2 className="text-lg font-bold text-slate-950">
-        {title}
-      </h2>
-
-      <p className="mt-1 text-sm text-slate-500">
+      <h2 className="text-xl font-bold text-blue-950">{title}</h2>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
         {description}
       </p>
     </header>
   );
 }
 
-function EmptyState({
-  title,
-  description,
-}) {
-  return (
-    <div className="p-8 text-center">
-      <p className="font-semibold text-slate-700">
-        {title}
-      </p>
-
-      <p className="mt-2 text-sm text-slate-500">
-        {description}
-      </p>
-    </div>
-  );
+function EmptyState({ message }) {
+  return <p className="p-8 text-center text-slate-500">{message}</p>;
 }
 
-function ProfilePhoto({
-  url,
-  name,
-}) {
-  if (url) {
-    return (
-      <img
-        src={url}
-        alt={`${name || "Advisor"} profile`}
-        className="h-10 w-10 rounded-full object-cover"
-      />
-    );
-  }
-
+function Message({ children, error = false }) {
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700">
-      {getInitials(name)}
-    </div>
-  );
-}
-
-function Badge({ value }) {
-  return (
-    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-      {formatValue(value)}
-    </span>
-  );
-}
-
-function Count({ value }) {
-  const numericValue =
-    Number(value) || 0;
-
-  return (
-    <span
-      className={
-        numericValue > 0
-          ? "font-semibold text-red-700"
-          : "text-slate-500"
-      }
+    <div
+      role={error ? "alert" : "status"}
+      className={`rounded-lg border p-4 text-sm ${
+        error
+          ? "border-red-200 bg-red-50 text-red-700"
+          : "border-blue-200 bg-blue-50 text-blue-800"
+      }`}
     >
-      {numericValue}
-    </span>
+      {children}
+    </div>
   );
 }
 
-function PageMessage({
-  message,
-  error = false,
-}) {
-  return (
-    <main className="p-5 md:p-8">
-      <div
-        role={error ? "alert" : "status"}
-        className={`mx-auto max-w-3xl rounded-xl border p-6 text-center ${
-          error
-            ? "border-red-200 bg-red-50 text-red-700"
-            : "border-slate-200 bg-white text-slate-600"
-        }`}
-      >
-        {message}
-      </div>
-    </main>
-  );
-}
-
-function formatValue(value) {
-  if (!value) {
-    return "Not available";
-  }
+function formatLabel(value) {
+  if (!value) return "Not available";
 
   return String(value)
     .split("_")
-    .map(
-      (word) =>
-        word.charAt(0).toUpperCase() +
-        word.slice(1),
-    )
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
 
 function formatDate(value) {
-  if (!value) {
-    return "Date unavailable";
-  }
+  if (!value) return "Date unavailable";
 
-  return new Intl.DateTimeFormat(
-    "en-NG",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    },
-  ).format(new Date(value));
-}
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
 
-function getInitials(value) {
-  if (!value) {
-    return "M";
-  }
-
-  return value
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) =>
-      word.charAt(0).toUpperCase(),
-    )
-    .join("");
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Africa/Lagos",
+  }).format(date);
 }
