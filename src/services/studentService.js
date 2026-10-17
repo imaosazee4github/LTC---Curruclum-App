@@ -1,10 +1,9 @@
 import { supabase } from "../lib/supabase";
 
 export async function initializeMyStudentProfile() {
-  const { data, error } =
-    await supabase.rpc(
-      "initialize_my_student_profile",
-    );
+  const { data, error } = await supabase.rpc(
+    "initialize_my_student_profile",
+  );
 
   if (error) {
     throw new Error(error.message);
@@ -13,9 +12,7 @@ export async function initializeMyStudentProfile() {
   return data;
 }
 
-export async function getMyStudentProfile(
-  profileId,
-) {
+export async function getMyStudentProfile(profileId) {
   if (!profileId) {
     return null;
   }
@@ -66,15 +63,12 @@ export async function getMyStudentProfile(
   return data;
 }
 
-export async function getOrInitializeStudentProfile(
-  profileId,
-) {
+export async function getOrInitializeStudentProfile(profileId) {
   if (!profileId) {
     return null;
   }
 
-  let studentProfile =
-    await getMyStudentProfile(profileId);
+  let studentProfile = await getMyStudentProfile(profileId);
 
   if (studentProfile) {
     return studentProfile;
@@ -82,8 +76,7 @@ export async function getOrInitializeStudentProfile(
 
   await initializeMyStudentProfile();
 
-  studentProfile =
-    await getMyStudentProfile(profileId);
+  studentProfile = await getMyStudentProfile(profileId);
 
   if (!studentProfile) {
     throw new Error(
@@ -108,53 +101,24 @@ export async function updateMyStudentProfile({
   emergencyContactRelationship,
   emergencyContactPhone,
 }) {
-  const { data, error } =
-    await supabase.rpc(
-      "update_my_student_profile",
-      {
-        p_full_name:
-          fullName?.trim() || "",
-
-        p_phone:
-          phone?.trim() || "",
-
-        p_preferred_name:
-          preferredName?.trim() ||
-          null,
-
-        p_date_of_birth:
-          dateOfBirth || null,
-
-        p_gender:
-          gender || null,
-
-        p_residential_address:
-          residentialAddress?.trim() ||
-          null,
-
-        p_city:
-          city?.trim() || null,
-
-        p_state:
-          state?.trim() || null,
-
-        p_country:
-          country?.trim() ||
-          "Nigeria",
-
-        p_emergency_contact_name:
-          emergencyContactName?.trim() ||
-          null,
-
-        p_emergency_contact_relationship:
-          emergencyContactRelationship
-            ?.trim() || null,
-
-        p_emergency_contact_phone:
-          emergencyContactPhone?.trim() ||
-          null,
-      },
-    );
+  const { data, error } = await supabase.rpc(
+    "update_my_student_profile",
+    {
+      p_full_name: fullName?.trim() || "",
+      p_phone: phone?.trim() || "",
+      p_preferred_name: preferredName?.trim() || null,
+      p_date_of_birth: dateOfBirth || null,
+      p_gender: gender || null,
+      p_residential_address: residentialAddress?.trim() || null,
+      p_city: city?.trim() || null,
+      p_state: state?.trim() || null,
+      p_country: country?.trim() || "Nigeria",
+      p_emergency_contact_name: emergencyContactName?.trim() || null,
+      p_emergency_contact_relationship:
+        emergencyContactRelationship?.trim() || null,
+      p_emergency_contact_phone: emergencyContactPhone?.trim() || null,
+    },
+  );
 
   if (error) {
     throw new Error(error.message);
@@ -163,27 +127,20 @@ export async function updateMyStudentProfile({
   return data;
 }
 
-export async function updateMyProfilePhoto({
-  secureUrl,
-  publicId,
-}) {
+export async function updateMyProfilePhoto({ secureUrl, publicId }) {
   if (!secureUrl || !publicId) {
     throw new Error(
       "Cloudinary did not return the required image information.",
     );
   }
 
-  const { data, error } =
-    await supabase.rpc(
-      "update_my_profile_photo",
-      {
-        p_profile_photo_url:
-          secureUrl,
-
-        p_profile_photo_public_id:
-          publicId,
-      },
-    );
+  const { data, error } = await supabase.rpc(
+    "update_my_profile_photo",
+    {
+      p_profile_photo_url: secureUrl,
+      p_profile_photo_public_id: publicId,
+    },
+  );
 
   if (error) {
     throw new Error(error.message);
@@ -192,92 +149,41 @@ export async function updateMyProfilePhoto({
   return data;
 }
 
-
 export async function getMyAssignedMentor() {
-  const { data, error } =
-    await supabase.rpc(
-      "get_my_assigned_mentor",
-    );
+  const { data, error } = await supabase.rpc(
+    "get_my_assigned_mentor",
+  );
 
   if (error) {
     throw new Error(error.message);
   }
 
   return {
-    success:
-      Boolean(data?.success),
-
-    assigned:
-      Boolean(data?.assigned),
-
-    mentor:
-      data?.mentor || null,
-
-    message:
-      data?.message || "",
+    success: Boolean(data?.success),
+    assigned: Boolean(data?.assigned),
+    mentor: data?.mentor || null,
+    message: data?.message || "",
   };
 }
+
 export async function getMyApprovedMentorFeedback() {
-  const { data, error } =
-    await supabase.rpc(
-      "get_my_approved_mentor_feedback",
-    );
+  const { data, error } = await supabase.rpc(
+    "get_my_approved_mentor_feedback",
+  );
 
   if (error) {
     throw new Error(error.message);
   }
 
   return {
-    success:
-      Boolean(data?.success),
-
-    assignedMentor:
-      data?.assignedMentor || null,
-
+    success: Boolean(data?.success),
+    assignedMentor: data?.assignedMentor || null,
     summary: {
-      approvedFeedback:
-        Number(
-          data?.summary
-            ?.approvedFeedback,
-        ) || 0,
+      approvedFeedback: Number(data?.summary?.approvedFeedback) || 0,
     },
-
-    feedback:
-      Array.isArray(data?.feedback)
-        ? data.feedback
-        : [],
+    feedback: Array.isArray(data?.feedback) ? data.feedback : [],
   };
 }
-
-// export async function getMyStudentDailySchedule(date) {
-//   if (!date) {
-//     throw new Error("Select a schedule date.");
-//   }
-
-//   const { data, error } = await supabase.rpc(
-//     "get_my_student_daily_schedule",
-//     {
-//       p_date: date,
-//     },
-//   );
-
-//   if (error) {
-//     throw new Error(error.message);
-//   }
-
-//   if (!data?.success) {
-//     throw new Error("Your daily schedule could not be loaded.");
-//   }
-
-//   return {
-//     date: data.date,
-//     timezone: data.timezone || "Africa/Lagos",
-//     activities: Array.isArray(data.activities)
-//       ? data.activities
-//       : [],
-//   };
-// }
-
 
 export async function getMyStudentDailySchedule(date) {
   if (!date) {
@@ -301,11 +207,10 @@ export async function getMyStudentDailySchedule(date) {
     throw new Error(serviceResult.error.message);
   }
 
-  if (
-    !learningResult.data?.success ||
-    !serviceResult.data?.success
-  ) {
-    throw new Error("Your complete daily schedule could not be loaded.");
+  if (!learningResult.data?.success || !serviceResult.data?.success) {
+    throw new Error(
+      "Your complete daily schedule could not be loaded.",
+    );
   }
 
   const learningActivities = Array.isArray(
@@ -339,7 +244,6 @@ export async function getMyStudentDailySchedule(date) {
   };
 }
 
-
 export async function getMyStudentCoaching() {
   const { data, error } = await supabase.rpc(
     "get_my_student_coaching",
@@ -357,14 +261,8 @@ export async function getMyStudentCoaching() {
     assignments: Array.isArray(data.assignments)
       ? data.assignments
       : [],
-
-    sessions: Array.isArray(data.sessions)
-      ? data.sessions
-      : [],
-
-    followUps: Array.isArray(data.followUps)
-      ? data.followUps
-      : [],
+    sessions: Array.isArray(data.sessions) ? data.sessions : [],
+    followUps: Array.isArray(data.followUps) ? data.followUps : [],
   };
 }
 
@@ -383,5 +281,26 @@ export async function getMyStudentLearning() {
 
   return {
     classes: Array.isArray(data.classes) ? data.classes : [],
+  };
+}
+
+export async function getMyStudentService() {
+  const { data, error } = await supabase.rpc(
+    "get_my_student_service",
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data?.success) {
+    throw new Error("Your service records could not be loaded.");
+  }
+
+  return {
+    timezone: data.timezone || "Africa/Lagos",
+    assignments: Array.isArray(data.assignments)
+      ? data.assignments
+      : [],
   };
 }

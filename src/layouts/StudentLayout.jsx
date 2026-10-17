@@ -1,9 +1,7 @@
 import { useState } from "react";
-
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
-import { useStudentProfile } from "../hooks/useStudentProfile";
 
 const primaryNavigation = [
   {
@@ -34,6 +32,12 @@ const primaryNavigation = [
     label: "My Learning",
     path: "/student/learning",
     icon: "▤",
+    available: true,
+  },
+  {
+    label: "My Service",
+    path: "/student/service",
+    icon: "⚒",
     available: true,
   },
   {
@@ -82,13 +86,8 @@ const primaryNavigation = [
 
 export default function StudentLayout({ children }) {
   const navigate = useNavigate();
-
   const { profile, signOut } = useAuth();
-
-  const { studentProfile } = useStudentProfile();
-
   const [menuOpen, setMenuOpen] = useState(false);
-
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
@@ -96,13 +95,9 @@ export default function StudentLayout({ children }) {
 
     try {
       await signOut();
-
-      navigate("/login", {
-        replace: true,
-      });
+      navigate("/login", { replace: true });
     } catch (error) {
       console.error("Unable to sign out:", error);
-
       setSigningOut(false);
     }
   }
@@ -117,7 +112,6 @@ export default function StudentLayout({ children }) {
         open={menuOpen}
         onClose={closeMenu}
         profile={profile}
-        studentProfile={studentProfile}
         signingOut={signingOut}
         onSignOut={handleSignOut}
       />
@@ -132,7 +126,10 @@ export default function StudentLayout({ children }) {
       )}
 
       <div className="lg:pl-72">
-        <StudentHeader profile={profile} onOpenMenu={() => setMenuOpen(true)} />
+        <StudentHeader
+          profile={profile}
+          onOpenMenu={() => setMenuOpen(true)}
+        />
 
         <div className="min-h-[calc(100vh-4.5rem)]">{children}</div>
       </div>
@@ -165,7 +162,6 @@ function StudentSidebar({
 
           <div>
             <p className="font-bold">Pioneer Portal</p>
-
             <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300">
               Student Portal
             </p>
@@ -190,8 +186,9 @@ function StudentSidebar({
             <p className="truncate font-semibold">
               {profile?.full_name || "Pioneer Student"}
             </p>
-
-            <p className="mt-1 truncate text-xs text-blue-200">Student</p>
+            <p className="mt-1 truncate text-xs text-blue-200">
+              Student
+            </p>
           </div>
         </div>
       </div>
@@ -225,7 +222,6 @@ function StudentSidebar({
                 >
                   {item.icon}
                 </span>
-
                 <span>{item.label}</span>
               </NavLink>
             ) : (
@@ -280,8 +276,9 @@ function StudentHeader({ profile, onOpenMenu }) {
         </button>
 
         <div>
-          <p className="text-sm text-slate-500">LTC Pioneer Programme</p>
-
+          <p className="text-sm text-slate-500">
+            LTC Pioneer Programme
+          </p>
           <p className="font-semibold text-blue-950">Student Portal</p>
         </div>
       </div>
@@ -293,7 +290,6 @@ function StudentHeader({ profile, onOpenMenu }) {
           className="relative rounded-lg border border-slate-200 p-2 text-slate-600"
         >
           <BellIcon />
-
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-500" />
         </button>
 
@@ -301,7 +297,6 @@ function StudentHeader({ profile, onOpenMenu }) {
           <p className="max-w-48 truncate text-sm font-semibold text-slate-800">
             {profile?.full_name || "Pioneer Student"}
           </p>
-
           <p className="text-xs text-slate-500">Student</p>
         </div>
 

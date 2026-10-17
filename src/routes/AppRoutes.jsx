@@ -6,11 +6,27 @@ import SupervisorDashboardPage from "../pages/supervisor/SupervisorDashboardPage
 import ServiceStudentAssignmentsPage from "../pages/supervisor/ServiceStudentAssignmentsPage";
 import ServiceAttendancePage from "../pages/supervisor/ServiceAttendancePage";
 import StudentServiceWorkRecordsPage from "../pages/supervisor/StudentServiceWorkRecordsPage";
+import ServiceProjectsPage from "../pages/supervisor/ServiceProjectsPage";
+
 import CourseManagementPage from "../pages/super-admin/CourseManagementPage";
 import StaffManagementPage from "../pages/super-admin/StaffManagementPage";
 import SuperAdminDashboardPage from "../pages/super-admin/SuperAdminDashboardPage";
+import ClassesSchedulesPage from "../pages/super-admin/ClassesSchedulesPage";
+import StaffAllocationsPage from "../pages/super-admin/StaffAllocationsPage";
+import ServiceOversightPage from "../pages/super-admin/ServiceOversightPage";
+import InstructorOversightPage from "../pages/super-admin/InstructorOversightPage";
+import FacilitatorOversightPage from "../pages/super-admin/FacilitatorOversightPage";
+import CoachOversightPage from "../pages/super-admin/CoachOversightPage";
+import CoachingAssignmentsPage from "../pages/super-admin/CoachingAssignmentsPage";
+import LearningExperienceManagementPage from "../pages/super-admin/LearningExperienceManagementPage";
+import SuperAdminStudentDetailsPage from "../pages/super-admin/SuperAdminStudentDetailsPage";
+
 import MentorAssignmentsPage from "../pages/mentor-department/MentorAssignmentsPage";
 import MentorDepartmentDashboardPage from "../pages/mentor-department/MentorDepartmentDashboardPage";
+import MentorReportsPage from "../pages/mentor-department/MentorReportsPage";
+import MentorDashboardPage from "../pages/mentor/MentorDashboardPage";
+import MentorMenteesPage from "../pages/mentor/MentorMenteesPage";
+
 import AuthCallbackPage from "../pages/auth/AuthCallbackPage";
 import AuthRedirectPage from "../pages/auth/AuthRedirectPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
@@ -18,62 +34,275 @@ import LoginPage from "../pages/auth/LoginPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import StudentRegistrationPage from "../pages/auth/StudentRegistrationPage";
 import LandingPage from "../pages/public/LandingPage";
+
 import InstructorDashboardPage from "../pages/instructor/InstructorDashboardPage";
-import StudentDashboardPage from "../pages/student/StudentDashboardPage";
-import StudentProfilePage from "../pages/student/StudentProfilePage";
-import MentorDashboardPage from "../pages/mentor/MentorDashboardPage";
-import MentorMenteesPage from "../pages/mentor/MentorMenteesPage";
-import MentorReportsPage from "../pages/mentor-department/MentorReportsPage";
-import CoachDashboardPage from "../pages/coach/CoachDashboardPage";
-import CoachAssignmentsPage from "../pages/coach/CoachAssignmentsPage";
-import CoachFollowUpsPage from "../pages/coach/CoachFollowUpsPage";
-import CoachingAssignmentsPage from "../pages/super-admin/CoachingAssignmentsPage";
-import RecordCoachingPage from "../pages/coach/RecordCoachingPage";
-import StudentCoachingRecordPage from "../pages/coach/StudentCoachingRecordPage";
-import FacilitatorDashboardPage from "../pages/facilitator/FacilitatorDashboardPage";
-import ClassesSchedulesPage from "../pages/super-admin/ClassesSchedulesPage";
-import StaffAllocationsPage from "../pages/super-admin/StaffAllocationsPage";
-import ServiceOversightPage from "../pages/super-admin/ServiceOversightPage";
-import InstructorOversightPage from "../pages/super-admin/InstructorOversightPage";
-import FacilitatorOversightPage from "../pages/super-admin/FacilitatorOversightPage";
-import CoachOversightPage from "../pages/super-admin/CoachOversightPage";
-import ServiceProjectsPage from "../pages/supervisor/ServiceProjectsPage";
-import FacilitatorExperiencesPage from "../pages/facilitator/FacilitatorExperiencesPage";
-import FacilitatorStudentsPage from "../pages/facilitator/FacilitatorStudentsPage";
-import FacilitatorEngagementPage from "../pages/facilitator/FacilitatorEngagementPage";
-import FacilitatorFollowUpsPage from "../pages/facilitator/FacilitatorFollowUpsPage";
-import LearningExperienceManagementPage from "../pages/super-admin/LearningExperienceManagementPage";
 import InstructorClassesPage from "../pages/instructor/InstructorClassesPage";
 import InstructorStudentsPage from "../pages/instructor/InstructorStudentsPage";
 import InstructorAttendancePage from "../pages/instructor/InstructorAttendancePage";
 import InstructorLearningPage from "../pages/instructor/InstructorLearningPage";
 import InstructorAssignmentsPage from "../pages/instructor/InstructorAssignmentsPage";
 import InstructorFollowUpsPage from "../pages/instructor/InstructorFollowUpsPage";
-import SuperAdminStudentDetailsPage from "../pages/super-admin/SuperAdminStudentDetailsPage";
+
+import StudentDashboardPage from "../pages/student/StudentDashboardPage";
+import StudentProfilePage from "../pages/student/StudentProfilePage";
 import StudentDailySchedulePage from "../pages/student/StudentDailySchedulePage";
 import StudentCoachingPage from "../pages/student/StudentCoachingPage";
 import StudentLearningPage from "../pages/student/StudentLearningPage";
+import StudentServicePage from "../pages/student/StudentServicePage";
+
+import CoachDashboardPage from "../pages/coach/CoachDashboardPage";
+import CoachAssignmentsPage from "../pages/coach/CoachAssignmentsPage";
+import CoachFollowUpsPage from "../pages/coach/CoachFollowUpsPage";
+import RecordCoachingPage from "../pages/coach/RecordCoachingPage";
+import StudentCoachingRecordPage from "../pages/coach/StudentCoachingRecordPage";
+
+import FacilitatorDashboardPage from "../pages/facilitator/FacilitatorDashboardPage";
+import FacilitatorExperiencesPage from "../pages/facilitator/FacilitatorExperiencesPage";
+import FacilitatorStudentsPage from "../pages/facilitator/FacilitatorStudentsPage";
+import FacilitatorEngagementPage from "../pages/facilitator/FacilitatorEngagementPage";
+import FacilitatorFollowUpsPage from "../pages/facilitator/FacilitatorFollowUpsPage";
+
+const protectedPages = [
+  {
+    path: "/student/dashboard",
+    role: "student",
+    element: <StudentDashboardPage />,
+  },
+  {
+    path: "/student/profile",
+    role: "student",
+    element: <StudentProfilePage />,
+  },
+  {
+    path: "/student/schedule",
+    role: "student",
+    element: <StudentDailySchedulePage />,
+  },
+  {
+    path: "/student/coaching",
+    role: "student",
+    element: <StudentCoachingPage />,
+  },
+  {
+    path: "/student/learning",
+    role: "student",
+    element: <StudentLearningPage />,
+  },
+  {
+    path: "/student/service",
+    role: "student",
+    element: <StudentServicePage />,
+  },
+  {
+    path: "/instructor/dashboard",
+    role: "instructor",
+    element: <InstructorDashboardPage />,
+  },
+  {
+    path: "/instructor/classes",
+    role: "instructor",
+    element: <InstructorClassesPage />,
+  },
+  {
+    path: "/instructor/students",
+    role: "instructor",
+    element: <InstructorStudentsPage />,
+  },
+  {
+    path: "/instructor/attendance",
+    role: "instructor",
+    element: <InstructorAttendancePage />,
+  },
+  {
+    path: "/instructor/learning",
+    role: "instructor",
+    element: <InstructorLearningPage />,
+  },
+  {
+    path: "/instructor/assignments",
+    role: "instructor",
+    element: <InstructorAssignmentsPage />,
+  },
+  {
+    path: "/instructor/follow-ups",
+    role: "instructor",
+    element: <InstructorFollowUpsPage />,
+  },
+  {
+    path: "/facilitator/dashboard",
+    role: "facilitator",
+    element: <FacilitatorDashboardPage />,
+  },
+  {
+    path: "/facilitator/experiences",
+    role: "facilitator",
+    element: <FacilitatorExperiencesPage />,
+  },
+  {
+    path: "/facilitator/students",
+    role: "facilitator",
+    element: <FacilitatorStudentsPage />,
+  },
+  {
+    path: "/facilitator/engagement",
+    role: "facilitator",
+    element: <FacilitatorEngagementPage />,
+  },
+  {
+    path: "/facilitator/follow-ups",
+    role: "facilitator",
+    element: <FacilitatorFollowUpsPage />,
+  },
+  {
+    path: "/supervisor/dashboard",
+    role: "supervisor",
+    element: <SupervisorDashboardPage />,
+  },
+  {
+    path: "/supervisor/projects",
+    role: "supervisor",
+    element: <ServiceProjectsPage />,
+  },
+  {
+    path: "/supervisor/student-assignments",
+    role: "supervisor",
+    element: <ServiceStudentAssignmentsPage />,
+  },
+  {
+    path: "/supervisor/attendance",
+    role: "supervisor",
+    element: <ServiceAttendancePage />,
+  },
+  {
+    path: "/supervisor/work-records",
+    role: "supervisor",
+    element: <StudentServiceWorkRecordsPage />,
+  },
+  {
+    path: "/mentor-department/dashboard",
+    role: "mentor_department",
+    element: <MentorDepartmentDashboardPage />,
+  },
+  {
+    path: "/mentor-department/assignments",
+    role: "mentor_department",
+    element: <MentorAssignmentsPage />,
+  },
+  {
+    path: "/mentor-department/reports",
+    role: "mentor_department",
+    element: <MentorReportsPage />,
+  },
+  {
+    path: "/mentor/dashboard",
+    role: "mentor",
+    element: <MentorDashboardPage />,
+  },
+  {
+    path: "/mentor/mentees",
+    role: "mentor",
+    element: <MentorMenteesPage />,
+  },
+  {
+    path: "/super-admin/dashboard",
+    role: "super_admin",
+    element: <SuperAdminDashboardPage />,
+  },
+  {
+    path: "/super-admin/students/:profileId",
+    role: "super_admin",
+    element: <SuperAdminStudentDetailsPage />,
+  },
+  {
+    path: "/super-admin/learning-experiences",
+    role: "super_admin",
+    element: <LearningExperienceManagementPage />,
+  },
+  {
+    path: "/super-admin/staff",
+    role: "super_admin",
+    element: <StaffManagementPage />,
+  },
+  {
+    path: "/super-admin/staff-allocations",
+    role: "super_admin",
+    element: <StaffAllocationsPage />,
+  },
+  {
+    path: "/super-admin/classes",
+    role: "super_admin",
+    element: <ClassesSchedulesPage />,
+  },
+  {
+    path: "/super-admin/learning-areas",
+    role: "super_admin",
+    element: <CourseManagementPage />,
+  },
+  {
+    path: "/super-admin/coaching-assignments",
+    role: "super_admin",
+    element: <CoachingAssignmentsPage />,
+  },
+  {
+    path: "/super-admin/instructor-oversight",
+    role: "super_admin",
+    element: <InstructorOversightPage />,
+  },
+  {
+    path: "/super-admin/facilitator-oversight",
+    role: "super_admin",
+    element: <FacilitatorOversightPage />,
+  },
+  {
+    path: "/super-admin/coach-oversight",
+    role: "super_admin",
+    element: <CoachOversightPage />,
+  },
+  {
+    path: "/super-admin/service-oversight",
+    role: "super_admin",
+    element: <ServiceOversightPage />,
+  },
+  {
+    path: "/coach/dashboard",
+    role: "coach",
+    element: <CoachDashboardPage />,
+  },
+  {
+    path: "/coach/records",
+    role: "coach",
+    element: <StudentCoachingRecordPage />,
+  },
+  {
+    path: "/coach/follow-ups",
+    role: "coach",
+    element: <CoachFollowUpsPage />,
+  },
+  {
+    path: "/coach/assignments",
+    role: "coach",
+    element: <CoachAssignmentsPage />,
+  },
+  {
+    path: "/coach/record",
+    role: "coach",
+    element: <RecordCoachingPage />,
+  },
+];
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/student/register" element={<StudentRegistrationPage />} />
-
       <Route
-        path="/super-admin/students/:profileId"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <SuperAdminStudentDetailsPage />
-          </ProtectedRoute>
-        }
+        path="/student/register"
+        element={<StudentRegistrationPage />}
       />
-
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
       <Route
         path="/auth/redirect"
         element={
@@ -83,389 +312,17 @@ export default function AppRoutes() {
         }
       />
 
-      <Route
-        path="/student/schedule"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <StudentDailySchedulePage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/student/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <StudentDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/student/profile"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <StudentProfilePage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/instructor/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["instructor"]}>
-            <InstructorDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/instructor/classes"
-        element={
-          <ProtectedRoute allowedRoles={["instructor"]}>
-            <InstructorClassesPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/instructor/students"
-        element={
-          <ProtectedRoute allowedRoles={["instructor"]}>
-            <InstructorStudentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/instructor/attendance"
-        element={
-          <ProtectedRoute allowedRoles={["instructor"]}>
-            <InstructorAttendancePage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/instructor/learning"
-        element={
-          <ProtectedRoute allowedRoles={["instructor"]}>
-            <InstructorLearningPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/instructor/assignments"
-        element={
-          <ProtectedRoute allowedRoles={["instructor"]}>
-            <InstructorAssignmentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/instructor/follow-ups"
-        element={
-          <ProtectedRoute allowedRoles={["instructor"]}>
-            <InstructorFollowUpsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/facilitator/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["facilitator"]}>
-            <FacilitatorDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/facilitator/experiences"
-        element={
-          <ProtectedRoute allowedRoles={["facilitator"]}>
-            <FacilitatorExperiencesPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/facilitator/students"
-        element={
-          <ProtectedRoute allowedRoles={["facilitator"]}>
-            <FacilitatorStudentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/facilitator/engagement"
-        element={
-          <ProtectedRoute allowedRoles={["facilitator"]}>
-            <FacilitatorEngagementPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/facilitator/follow-ups"
-        element={
-          <ProtectedRoute allowedRoles={["facilitator"]}>
-            <FacilitatorFollowUpsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/supervisor/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["supervisor"]}>
-            <SupervisorDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/supervisor/projects"
-        element={
-          <ProtectedRoute allowedRoles={["supervisor"]}>
-            <ServiceProjectsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/supervisor/student-assignments"
-        element={
-          <ProtectedRoute allowedRoles={["supervisor"]}>
-            <ServiceStudentAssignmentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/supervisor/attendance"
-        element={
-          <ProtectedRoute allowedRoles={["supervisor"]}>
-            <ServiceAttendancePage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/supervisor/work-records"
-        element={
-          <ProtectedRoute allowedRoles={["supervisor"]}>
-            <StudentServiceWorkRecordsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/mentor-department/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["mentor_department"]}>
-            <MentorDepartmentDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/mentor-department/assignments"
-        element={
-          <ProtectedRoute allowedRoles={["mentor_department"]}>
-            <MentorAssignmentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/mentor-department/reports"
-        element={
-          <ProtectedRoute allowedRoles={["mentor_department"]}>
-            <MentorReportsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/mentor/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["mentor"]}>
-            <MentorDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/mentor/mentees"
-        element={
-          <ProtectedRoute allowedRoles={["mentor"]}>
-            <MentorMenteesPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <SuperAdminDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/learning-experiences"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <LearningExperienceManagementPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/staff"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <StaffManagementPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/staff-allocations"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <StaffAllocationsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/classes"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <ClassesSchedulesPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/learning-areas"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <CourseManagementPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/coach/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["coach"]}>
-            <CoachDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/coach/records"
-        element={
-          <ProtectedRoute allowedRoles={["coach"]}>
-            <StudentCoachingRecordPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/coach/follow-ups"
-        element={
-          <ProtectedRoute allowedRoles={["coach"]}>
-            <CoachFollowUpsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/student/coaching"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <StudentCoachingPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/coach/assignments"
-        element={
-          <ProtectedRoute allowedRoles={["coach"]}>
-            <CoachAssignmentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/coaching-assignments"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <CoachingAssignmentsPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/instructor-oversight"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <InstructorOversightPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/facilitator-oversight"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <FacilitatorOversightPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/coach-oversight"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <CoachOversightPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/student/learning"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <StudentLearningPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/super-admin/service-oversight"
-        element={
-          <ProtectedRoute allowedRoles={["super_admin"]}>
-            <ServiceOversightPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/coach/record"
-        element={
-          <ProtectedRoute allowedRoles={["coach"]}>
-            <RecordCoachingPage />
-          </ProtectedRoute>
-        }
-      />
+      {protectedPages.map(({ path, role, element }) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            <ProtectedRoute allowedRoles={[role]}>
+              {element}
+            </ProtectedRoute>
+          }
+        />
+      ))}
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
