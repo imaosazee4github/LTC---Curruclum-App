@@ -12,102 +12,67 @@ import {
 } from "../services/mentorService";
 
 export function useMentorDashboard() {
-  const queryClient =
-    useQueryClient();
+  const queryClient = useQueryClient();
+  const { profile, role } = useAuth();
 
-  const {
-    profile,
-    role,
-  } = useAuth();
+  const enabled =
+    Boolean(profile?.id) &&
+    role === "mentor";
 
-  const dashboardQuery =
-    useQuery({
-      queryKey: [
-        "mentor-dashboard",
-        profile?.id,
-      ],
+  const dashboardQuery = useQuery({
+    queryKey: ["mentor-dashboard", profile?.id],
+    queryFn: getMyMentorDashboard,
+    enabled,
+    staleTime: 30 * 1000,
 
-      queryFn:
-        getMyMentorDashboard,
+    // Keep shared work updated while either spouse is signed in.
+    refetchInterval: 30 * 1000,
+    refetchOnWindowFocus: true,
+  });
 
-      enabled:
-        Boolean(profile?.id) &&
-        role === "mentor",
-
-      staleTime:
-        30 * 1000,
-    });
-
-
-  const submitReportMutation =
-    useMutation({
-      mutationFn:
-        submitMentorReport,
-
-      onSuccess: async () => {
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: [
-              "mentor-dashboard",
-              profile?.id,
-            ],
-          }),
-
-          queryClient.invalidateQueries({
-            queryKey: [
-              "mentoring-report-queue",
-            ],
-          }),
-
-          queryClient.invalidateQueries({
-            queryKey: [
-              "mentor-department-dashboard",
-            ],
-          }),
-        ]);
-      },
-
-      onError: (error) => {
-        console.error(
-          "Mentor report submission failed:",
-          error,
+  const submitReportMutation = useMutation({
+    mutationFn: (values) => {
+      if (!enabled) {
+        throw new Error(
+          "Only an Advisor can submit an advisory report.",
         );
-      },
-    });
+      }
 
+      return submitMentorReport(values);
+    },
+
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["mentor-dashboard"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["mentoring-report-queue"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["mentor-department-dashboard"],
+        }),
+      ]);
+    },
+
+    onError: (error) => {
+      console.error("Advisory report submission failed:", error);
+    },
+  });
 
   return {
-    mentorDashboard:
-      dashboardQuery.data || null,
+    mentorDashboard: dashboardQuery.data || null,
+    mentorDashboardLoading: dashboardQuery.isLoading,
+    mentorDashboardFetching: dashboardQuery.isFetching,
+    mentorDashboardError: dashboardQuery.error,
+    refreshMentorDashboard: dashboardQuery.refetch,
 
-    mentorDashboardLoading:
-      dashboardQuery.isLoading,
-
-    mentorDashboardFetching:
-      dashboardQuery.isFetching,
-
-    mentorDashboardError:
-      dashboardQuery.error,
-
-    refreshMentorDashboard:
-      dashboardQuery.refetch,
-
-
-    submitReport:
-      submitReportMutation
-        .mutateAsync,
-
-    submittingReport:
-      submitReportMutation
-        .isPending,
-
-    submitReportError:
-      submitReportMutation.error,
-
-    submitReportResult:
-      submitReportMutation.data,
-
-    resetSubmitReport:
-      submitReportMutation.reset,
+    submitReport: submitReportMutation.mutateAsync,
+    submittingReport: submitReportMutation.isPending,
+    submitReportError: submitReportMutation.error,
+    submitReportResult: submitReportMutation.data,
+    resetSubmitReport: submitReportMutation.reset,
   };
 }
