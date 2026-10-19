@@ -220,7 +220,7 @@ export default function MentorAssignmentsPage() {
                           onChange={changeCoupleForm}
                           required
                           maxLength={200}
-                          placeholder="For example: Osazee and Blessing"
+                          placeholder="Enter a name for the couple."
                           className={inputClasses}
                         />
                       </Field>
