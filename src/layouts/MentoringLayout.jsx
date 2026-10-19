@@ -17,70 +17,6 @@ import { useState } from "react";
 
 import { useAuth } from "../hooks/useAuth";
 
-// const navigationByRole = {
-//   mentor_department: [
-//     {
-//       label: "Dashboard",
-//       path: "/mentor-department/dashboard",
-//       icon: LayoutDashboard,
-//       available: true,
-//     },
-//     {
-//       label: "Advisor Assignments",
-//       path: "/mentor-department/assignments",
-//       icon: UserRoundCheck,
-//       available: true,
-//     },
-//     {
-//       label: "Advisory Reports",
-//       path: "/mentor-department/reports",
-//       icon: ClipboardList,
-//       available: true,
-//     },
-//     {
-//       label: "Devotions",
-//       path: "/mentor-department/devotions",
-//       icon: CalendarDays,
-//       available: true,
-//     },
-//     {
-//       label: "My Actions",
-//       path: "/mentor/actions",
-//       icon: ListChecks,
-//       available: true,
-//     },
-//   ],
-
-//   mentor: [
-//     {
-//       label: "Dashboard",
-//       path: "/mentor/dashboard",
-//       icon: LayoutDashboard,
-//       available: true,
-//     },
-//     {
-//       label: "My Students",
-//       path: "/mentor/mentees",
-//       icon: Users,
-//       available: true,
-//     },
-//     {
-//       label: "My Reports",
-//       path: "/mentor/reports",
-//       icon: ClipboardList,
-//       available: true,
-//     },
-//     {
-//       label: "My Actions",
-//       path: "/mentor/actions",
-//       icon: ListChecks,
-//       available: false,
-//     },
-//   ],
-// };
-
-
-
 const navigationByRole = {
   mentor_department: [
     {
@@ -138,6 +74,12 @@ const navigationByRole = {
       label: "My Actions",
       path: "/mentor/actions",
       icon: ListChecks,
+      available: true,
+    },
+    {
+      label: "Student Concerns",
+      path: "/mentor/concerns",
+      icon: ClipboardList,
       available: true,
     },
   ],
