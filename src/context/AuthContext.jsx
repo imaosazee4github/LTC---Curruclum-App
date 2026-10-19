@@ -18,7 +18,6 @@ import {
 
 import { AuthContext } from "./authContextStore.js";
 
-
 function readSelectedRole(userId) {
   try {
     return sessionStorage.getItem(`ltc-active-role:${userId}`);
@@ -37,7 +36,7 @@ function saveSelectedRole(userId, role) {
       sessionStorage.removeItem(key);
     }
   } catch {
-    // Role selection still works when browser storage is unavailable.
+    // Role selection still works without browser storage.
   }
 }
 
@@ -66,17 +65,13 @@ export function AuthProvider({ children }) {
     const version = ++loadVersion.current;
     currentUserId.current = userId;
 
-    if (!userId) {
-      setProfile(null);
-      setAvailableRoles([]);
-      setActiveRole(null);
-      return null;
-    }
-
-    // Clear previous permissions while checking the current account.
     setProfile(null);
     setAvailableRoles([]);
     setActiveRole(null);
+
+    if (!userId) {
+      return null;
+    }
 
     const profileData = await getProfile(userId);
 
@@ -84,7 +79,10 @@ export function AuthProvider({ children }) {
 
     if (profileData?.account_status === "active") {
       const access = await getMyAccessRoles();
-      roles = access.roles;
+
+      roles = Array.isArray(access?.roles)
+        ? access.roles
+        : [];
     }
 
     if (
@@ -114,31 +112,60 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true;
     let authEventVersion = 0;
+    let sessionVersion = 0;
+
     const timers = new Set();
 
-    async function applySession(nextSession) {
-      if (!active) return;
+    async function applySession(nextSession, event) {
+      if (!active) {
+        return;
+      }
+
+      const nextUser = nextSession?.user || null;
+      const nextUserId = nextUser?.id || null;
+
+      const routineEvent =
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "SESSION_RESTORED";
+
+      const sameAccount =
+        Boolean(nextUserId) &&
+        currentUserId.current === nextUserId;
+
+      // Keep the session current without unmounting forms.
+      // This also avoids duplicate profile requests while
+      // the same account is already being loaded.
+      if (sameAccount && routineEvent) {
+        setSession(nextSession);
+        setUser(nextUser);
+        return;
+      }
+
+      const version = ++sessionVersion;
 
       setLoading(true);
       setAuthError("");
       setSession(nextSession);
-      setUser(nextSession?.user || null);
+      setUser(nextUser);
 
       try {
-        if (nextSession?.user?.id) {
-          await loadProfile(nextSession.user.id);
+        if (nextUserId) {
+          await loadProfile(nextUserId);
         } else {
           clearAccount();
         }
       } catch (error) {
-        if (active) {
+        if (active && version === sessionVersion) {
           clearAccount();
+
           setAuthError(
-            error.message || "Unable to load your account.",
+            error?.message || "Unable to load your account.",
           );
         }
       } finally {
-        if (active) {
+        if (active && version === sessionVersion) {
           setLoading(false);
         }
       }
@@ -151,29 +178,34 @@ export function AuthProvider({ children }) {
         const currentSession = await getCurrentSession();
 
         if (active && startingVersion === authEventVersion) {
-          await applySession(currentSession);
+          await applySession(
+            currentSession,
+            "SESSION_RESTORED",
+          );
         }
       } catch (error) {
         if (active && startingVersion === authEventVersion) {
           clearAccount();
+
           setAuthError(
-            error.message || "Unable to load your account.",
+            error?.message || "Unable to load your account.",
           );
+
           setLoading(false);
         }
       }
     }
 
     const subscription = subscribeToAuthChanges(
-      (_event, nextSession) => {
+      (event, nextSession) => {
         const eventVersion = ++authEventVersion;
 
-        // Run database requests after the auth callback completes.
+        // Run database requests after the auth callback exits.
         const timer = window.setTimeout(() => {
           timers.delete(timer);
 
           if (active && eventVersion === authEventVersion) {
-            void applySession(nextSession);
+            void applySession(nextSession, event);
           }
         }, 0);
 
@@ -185,7 +217,10 @@ export function AuthProvider({ children }) {
 
     return () => {
       active = false;
+      sessionVersion += 1;
       loadVersion.current += 1;
+      currentUserId.current = null;
+
       timers.forEach((timer) => window.clearTimeout(timer));
       subscription?.unsubscribe();
     };
@@ -197,7 +232,7 @@ export function AuthProvider({ children }) {
     try {
       return await registerStudentRequest(credentials);
     } catch (error) {
-      setAuthError(error.message);
+      setAuthError(error?.message || "Registration failed.");
       throw error;
     }
   }, []);
@@ -208,7 +243,7 @@ export function AuthProvider({ children }) {
     try {
       return await signInRequest(credentials);
     } catch (error) {
-      setAuthError(error.message);
+      setAuthError(error?.message || "Sign in failed.");
       throw error;
     }
   }, []);
@@ -234,63 +269,59 @@ export function AuthProvider({ children }) {
   const signOut = useCallback(async () => {
     setAuthError("");
 
+    const signingOutUserId = currentUserId.current;
+
     try {
       await signOutRequest();
 
-      if (currentUserId.current) {
-        saveSelectedRole(currentUserId.current, null);
+      if (signingOutUserId) {
+        saveSelectedRole(signingOutUserId, null);
       }
 
       setSession(null);
       setUser(null);
       clearAccount();
+      setLoading(false);
     } catch (error) {
-      setAuthError(error.message);
+      setAuthError(error?.message || "Sign out failed.");
       throw error;
     }
   }, [clearAccount]);
 
-  // const refreshProfile = useCallback(async () => {
-  //   if (!user?.id) {
-  //     clearAccount();
-  //     return null;
-  //   }
-
-  //   setLoading(true);
-  //   setAuthError("");
-
-  //   try {
-  //     return await loadProfile(user.id);
-  //   } catch (error) {
-  //     clearAccount();
-  //     setAuthError(error.message);
-  //     throw error;
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [loadProfile, clearAccount, user?.id]);
-
   const userId = user?.id;
 
-const refreshProfile = useCallback(async () => {
-  if (!userId) {
-    clearAccount();
-    return null;
-  }
+  const refreshProfile = useCallback(async () => {
+    if (!userId) {
+      clearAccount();
+      return null;
+    }
 
-  setLoading(true);
-  setAuthError("");
+    setLoading(true);
+    setAuthError("");
 
-  try {
-    return await loadProfile(userId);
-  } catch (error) {
-    clearAccount();
-    setAuthError(error.message);
-    throw error;
-  } finally {
-    setLoading(false);
-  }
-}, [loadProfile, clearAccount, userId]);
+    const request = loadProfile(userId);
+    const version = loadVersion.current;
+
+    try {
+      return await request;
+    } catch (error) {
+      if (version === loadVersion.current) {
+        clearAccount();
+
+        setAuthError(
+          error?.message || "Unable to refresh your account.",
+        );
+
+        setLoading(false);
+      }
+
+      throw error;
+    } finally {
+      if (version === loadVersion.current) {
+        setLoading(false);
+      }
+    }
+  }, [loadProfile, clearAccount, userId]);
 
   const clearAuthError = useCallback(() => {
     setAuthError("");
@@ -302,7 +333,6 @@ const refreshProfile = useCallback(async () => {
       user,
       profile,
 
-      // Used by existing hooks, route guards and dashboard redirects.
       role: activeRole,
       activeRole,
       primaryRole: profile?.role || null,

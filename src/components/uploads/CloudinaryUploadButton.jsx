@@ -9,27 +9,19 @@ export default function CloudinaryUploadButton({
   buttonText = "Upload Image",
 }) {
   const widgetRef = useRef(null);
-  const onUploadCompleteRef = useRef(
-    onUploadComplete,
-  );
+  const onUploadCompleteRef = useRef(onUploadComplete);
 
-  const [uploading, setUploading] =
-    useState(false);
-
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [uploading, setUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const cloudName =
-    import.meta.env
-      .VITE_CLOUDINARY_CLOUD_NAME;
+    import.meta.env.VITE_CLOUDINARY_CLOUD_NAME?.trim() || "";
 
   const uploadPreset =
-    import.meta.env
-      .VITE_CLOUDINARY_UPLOAD_PRESET;
+    import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET?.trim() || "";
 
   useEffect(() => {
-    onUploadCompleteRef.current =
-      onUploadComplete;
+    onUploadCompleteRef.current = onUploadComplete;
   }, [onUploadComplete]);
 
   useEffect(() => {
@@ -41,116 +33,92 @@ export default function CloudinaryUploadButton({
       return undefined;
     }
 
-    widgetRef.current =
-      window.cloudinary.createUploadWidget(
-        {
-          cloudName,
-          uploadPreset,
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName,
+        uploadPreset,
+        sources: ["local", "camera"],
+        multiple: false,
+        resourceType: "image",
+        clientAllowedFormats: [
+          "jpg",
+          "jpeg",
+          "png",
+          "webp",
+        ],
+        maxFileSize: 5_000_000,
+        cropping: false,
+        showAdvancedOptions: false,
+      },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload failed:", error);
 
-          sources: [
-            "local",
-            "camera",
-          ],
+          setErrorMessage(
+            "The image could not be uploaded.",
+          );
 
-          multiple: false,
-          resourceType: "image",
+          setUploading(false);
+          return;
+        }
 
-          clientAllowedFormats: [
-            "jpg",
-            "jpeg",
-            "png",
-            "webp",
-          ],
+        if (result?.event === "upload-added") {
+          setUploading(true);
+          setErrorMessage("");
+        }
 
-          maxFileSize: 5_000_000,
-          cropping: false,
-          showAdvancedOptions: false,
-        },
+        if (result?.event === "success") {
+          setUploading(false);
+          setErrorMessage("");
 
-        (error, result) => {
-          if (error) {
-            console.error(
-              "Cloudinary upload failed:",
-              error,
-            );
+          onUploadCompleteRef.current?.({
+            secureUrl: result.info.secure_url,
+            publicId: result.info.public_id,
+            originalFilename: result.info.original_filename,
+            format: result.info.format,
+            width: result.info.width,
+            height: result.info.height,
+            bytes: result.info.bytes,
+            resourceType: result.info.resource_type,
+          });
+        }
 
-            setErrorMessage(
-              "The image could not be uploaded.",
-            );
+        if (result?.event === "close") {
+          setUploading(false);
+        }
+      },
+    );
 
-            setUploading(false);
-            return;
-          }
-
-          if (
-            result?.event ===
-            "upload-added"
-          ) {
-            setUploading(true);
-            setErrorMessage("");
-          }
-
-          if (
-            result?.event === "success"
-          ) {
-            setUploading(false);
-
-            onUploadCompleteRef.current?.({
-              secureUrl:
-                result.info.secure_url,
-
-              publicId:
-                result.info.public_id,
-
-              originalFilename:
-                result.info
-                  .original_filename,
-
-              format:
-                result.info.format,
-
-              width:
-                result.info.width,
-
-              height:
-                result.info.height,
-
-              bytes:
-                result.info.bytes,
-
-              resourceType:
-                result.info.resource_type,
-            });
-          }
-
-          if (
-            result?.event === "close"
-          ) {
-            setUploading(false);
-          }
-        },
-      );
+    widgetRef.current = widget;
 
     return () => {
-      widgetRef.current?.destroy?.();
-      widgetRef.current = null;
+      widget.destroy?.();
+
+      if (widgetRef.current === widget) {
+        widgetRef.current = null;
+      }
     };
   }, [cloudName, uploadPreset]);
 
   function openUploadWidget() {
     setErrorMessage("");
 
-    if (!window.cloudinary) {
+    const missingSettings = [
+      !cloudName && "VITE_CLOUDINARY_CLOUD_NAME",
+      !uploadPreset && "VITE_CLOUDINARY_UPLOAD_PRESET",
+    ].filter(Boolean);
+
+    if (missingSettings.length > 0) {
       setErrorMessage(
-        "The upload service is unavailable. Refresh the page and try again.",
+        `Missing configuration: ${missingSettings.join(", ")}. Restart the development server after updating .env.local.`,
       );
 
       return;
     }
 
-    if (!cloudName || !uploadPreset) {
+    if (!window.cloudinary) {
       setErrorMessage(
-        "Cloudinary configuration is missing.",
+        "The upload service is unavailable. Refresh the page and try again.",
       );
 
       return;
@@ -175,9 +143,7 @@ export default function CloudinaryUploadButton({
         disabled={uploading}
         className="rounded-lg bg-blue-900 px-5 py-3 font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {uploading
-          ? "Uploading..."
-          : buttonText}
+        {uploading ? "Uploading..." : buttonText}
       </button>
 
       {errorMessage && (

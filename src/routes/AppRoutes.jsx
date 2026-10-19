@@ -52,6 +52,7 @@ import StudentDailySchedulePage from "../pages/student/StudentDailySchedulePage"
 import StudentCoachingPage from "../pages/student/StudentCoachingPage";
 import StudentLearningPage from "../pages/student/StudentLearningPage";
 import StudentServicePage from "../pages/student/StudentServicePage";
+import StudentConcernsPage from "../pages/mentor/StudentConcernsPage";
 
 import CoachDashboardPage from "../pages/coach/CoachDashboardPage";
 import CoachAssignmentsPage from "../pages/coach/CoachAssignmentsPage";
@@ -59,6 +60,7 @@ import CoachFollowUpsPage from "../pages/coach/CoachFollowUpsPage";
 import RecordCoachingPage from "../pages/coach/RecordCoachingPage";
 import StudentCoachingRecordPage from "../pages/coach/StudentCoachingRecordPage";
 
+import FacilitatorAdvisoryUpdatesPage from "../pages/facilitator/FacilitatorAdvisoryUpdatesPage";
 import FacilitatorDashboardPage from "../pages/facilitator/FacilitatorDashboardPage";
 import FacilitatorExperiencesPage from "../pages/facilitator/FacilitatorExperiencesPage";
 import FacilitatorStudentsPage from "../pages/facilitator/FacilitatorStudentsPage";
@@ -85,6 +87,21 @@ const protectedPages = [
     path: "/student/coaching",
     role: "student",
     element: <StudentCoachingPage />,
+  },
+  {
+    path: "/mentor/concerns",
+    role: "mentor",
+    element: <StudentConcernsPage />,
+  },
+  {
+    path: "/mentor-department/concerns",
+    role: "mentor_department",
+    element: <StudentConcernsPage />,
+  },
+  {
+    path: "/mentor/reports",
+    role: "mentor",
+    element: <MentorMenteesPage />,
   },
   {
     path: "/student/learning",
@@ -145,6 +162,11 @@ const protectedPages = [
     path: "/facilitator/students",
     role: "facilitator",
     element: <FacilitatorStudentsPage />,
+  },
+  {
+    path: "/facilitator/advisory-updates",
+    role: "facilitator",
+    element: <FacilitatorAdvisoryUpdatesPage />,
   },
   {
     path: "/facilitator/engagement",
