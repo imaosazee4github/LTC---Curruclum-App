@@ -16,7 +16,7 @@ import SuperAdminLayout from "../../layouts/SuperAdminLayout";
 const initialForm = {
   profileId: "",
   role: "instructor",
-  classId: "",
+  courseId: "",
   supervisorType: "",
   specialization: "",
   biography: "",
@@ -25,7 +25,7 @@ const initialForm = {
 const roleOptions = [
   { value: "instructor", label: "Instructor" },
   { value: "facilitator", label: "Facilitator" },
-  { value: "coach", label: "Coach" }
+  { value: "coach", label: "Coach" },
 ];
 
 const inputClasses =
@@ -36,8 +36,8 @@ export default function StaffManagementPage() {
     staffSummary,
     staff,
     eligibleAccounts,
-    courseClasses = [],
-    classAllocations = [],
+    courses = [],
+    courseAppointments = [],
     staffManagementLoading,
     staffManagementFetching,
     staffManagementError,
@@ -89,7 +89,7 @@ export default function StaffManagementPage() {
     if (!search) return staff;
 
     return staff.filter((member) => {
-      const assignments = classAllocations.filter(
+      const assignments = courseAppointments.filter(
         (assignment) =>
           assignment.staffProfileId === member.staff_profile_id &&
           assignment.status === "active",
@@ -118,7 +118,7 @@ export default function StaffManagementPage() {
 
       return searchableText.includes(search);
     });
-  }, [searchTerm, staff, classAllocations]);
+  }, [searchTerm, staff, courseAppointments]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -129,7 +129,7 @@ export default function StaffManagementPage() {
 
       ...(name === "role"
         ? {
-            classId: "",
+            courseId: "",
             supervisorType: "",
           }
         : {}),
@@ -148,7 +148,7 @@ export default function StaffManagementPage() {
     resetAppointStaff();
 
     if (!form.profileId) {
-      setLocalError("Select an account.");
+      setLocalError("Select a staff account.");
       return;
     }
 
@@ -158,21 +158,23 @@ export default function StaffManagementPage() {
     }
 
     if (isEducator) {
-      const selectedClass = courseClasses.find(
-        (programmeClass) => programmeClass.id === form.classId,
+      const selectedCourse = courses.find(
+        (course) => course.id === form.courseId,
       );
 
-      if (!selectedClass) {
+      if (!selectedCourse) {
         setLocalError("Select a course.");
         return;
       }
-    }
 
-    if (
-      !isEducator &&
-      !["service_coordinator", "site_supervisor"].includes(
-        form.supervisorType,
-      )
+      if (form.role !== "coach" && form.role !== selectedCourse.teachingRole) {
+        setLocalError(
+          `This course uses a ${selectedCourse.teachingRole} and a coach.`,
+        );
+        return;
+      }
+    } else if (
+      !["service_coordinator", "site_supervisor"].includes(form.supervisorType)
     ) {
       setLocalError("Select a supervisor type.");
       return;
@@ -181,14 +183,14 @@ export default function StaffManagementPage() {
     try {
       await appointStaff({
         ...form,
-        classId: isEducator ? form.classId : null,
+        courseId: isEducator ? form.courseId : null,
         supervisorType: isEducator ? null : form.supervisorType,
       });
 
       setForm({ ...initialForm });
     } catch (error) {
       setLocalError(
-        error.message || "The staff assignment could not be saved.",
+        error.message || "The staff appointment could not be saved.",
       );
     }
   }
@@ -230,8 +232,8 @@ export default function StaffManagementPage() {
               </h1>
 
               <p className="mt-2 max-w-3xl leading-7 text-slate-600">
-                Manage staff roles and assign instructors, facilitators
-                and coaches to courses.
+                Manage staff roles and assign instructors, facilitators and
+                coaches to courses.
               </p>
             </div>
 
@@ -297,10 +299,7 @@ export default function StaffManagementPage() {
                 description="An educator can hold several roles and support more than one course."
               />
 
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-5 p-5 md:p-6"
-              >
+              <form onSubmit={handleSubmit} className="space-y-5 p-5 md:p-6">
                 {appointStaffResult?.success && (
                   <AlertMessage
                     success
@@ -322,9 +321,7 @@ export default function StaffManagementPage() {
                     name="profileId"
                     value={form.profileId}
                     onChange={handleChange}
-                    disabled={
-                      appointingStaff || accountOptions.length === 0
-                    }
+                    disabled={appointingStaff || accountOptions.length === 0}
                     required
                     className={inputClasses}
                   >
@@ -367,53 +364,62 @@ export default function StaffManagementPage() {
                   </select>
 
                   <p className="mt-2 text-xs leading-5 text-slate-500">
-                    Save each role and course assignment separately.
-                    Existing educator roles are retained.
+                    Save each role and course assignment separately. Existing
+                    educator roles are retained.
                   </p>
                 </FormField>
 
                 {isEducator ? (
                   <FormField label="Course" required>
                     <select
-                      name="classId"
-                      value={form.classId}
+                      name="courseId"
+                      value={form.courseId}
                       onChange={handleChange}
                       disabled={
-                        appointingStaff || courseClasses.length === 0
+                        appointingStaff ||
+                        !courses.some(
+                          (course) =>
+                            form.role === "coach" ||
+                            course.teachingRole === form.role,
+                        )
                       }
                       required
                       className={inputClasses}
                     >
                       <option value="">Select a course</option>
 
-                      {courseClasses.map((programmeClass) => {
-                        const hasMultipleClasses = courseClasses.some(
-                          (item) =>
-                            item.id !== programmeClass.id &&
-                            item.courseId === programmeClass.courseId,
-                        );
-
-                        return (
-                          <option
-                            key={programmeClass.id}
-                            value={programmeClass.id}
-                          >
-                            {programmeClass.courseTitle ||
-                              programmeClass.name}
-                            {hasMultipleClasses
-                              ? ` — ${programmeClass.name}`
-                              : ""}
+                      {courses
+                        .filter(
+                          (course) =>
+                            form.role === "coach" ||
+                            course.teachingRole === form.role,
+                        )
+                        .map((course) => (
+                          <option key={course.id} value={course.id}>
+                            {course.title}
                           </option>
-                        );
-                      })}
+                        ))}
                     </select>
 
-                    {courseClasses.length === 0 && (
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Appoint staff to the course once. Assign their Class A or
+                      Class B lessons through weekly planning.
+                    </p>
+
+                    {courses.length === 0 ? (
                       <p className="mt-2 text-sm leading-6 text-amber-700">
-                        Create a planned or active class under Classes &
-                        Schedules before assigning an educator.
+                        Create a planned or active course first.
                       </p>
-                    )}
+                    ) : !courses.some(
+                        (course) =>
+                          form.role === "coach" ||
+                          course.teachingRole === form.role,
+                      ) ? (
+                      <p className="mt-2 text-sm leading-6 text-amber-700">
+                        No courses are available for this appointment. Select
+                        another appointment.
+                      </p>
+                    ) : null}
                   </FormField>
                 ) : (
                   <FormField label="Supervisor type" required>
@@ -429,14 +435,12 @@ export default function StaffManagementPage() {
                       <option value="service_coordinator">
                         Service Coordinator
                       </option>
-                      <option value="site_supervisor">
-                        Site Supervisor
-                      </option>
+                      <option value="site_supervisor">Site Supervisor</option>
                     </select>
 
                     <p className="mt-2 text-xs leading-5 text-slate-500">
-                      Supervisors are assigned to service projects
-                      through Staff Allocations.
+                      Supervisors are assigned to service projects through Staff
+                      Allocations.
                     </p>
                   </FormField>
                 )}
@@ -470,7 +474,7 @@ export default function StaffManagementPage() {
                   disabled={
                     appointingStaff ||
                     accountOptions.length === 0 ||
-                    (isEducator && courseClasses.length === 0)
+                    (isEducator && courses.length === 0)
                   }
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-950 px-5 py-3 font-semibold text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -521,11 +525,7 @@ export default function StaffManagementPage() {
                           "Course",
                           "Specialization",
                         ].map((heading) => (
-                          <th
-                            key={heading}
-                            scope="col"
-                            className="px-5 py-4"
-                          >
+                          <th key={heading} scope="col" className="px-5 py-4">
                             {heading}
                           </th>
                         ))}
@@ -537,7 +537,7 @@ export default function StaffManagementPage() {
                         <StaffRow
                           key={member.staff_profile_id}
                           member={member}
-                          allocations={classAllocations}
+                          allocations={courseAppointments}
                         />
                       ))}
                     </tbody>
@@ -575,7 +575,7 @@ function StaffRow({ member, allocations }) {
       ? member.appointed_roles
       : [member.role].filter(Boolean);
 
-  const assignedClasses = allocations.filter(
+  const assignedCourses = allocations.filter(
     (assignment) =>
       assignment.staffProfileId === member.staff_profile_id &&
       assignment.status === "active",
@@ -587,6 +587,7 @@ function StaffRow({ member, allocations }) {
         <p className="font-semibold text-slate-900">
           {member.full_name || "Name unavailable"}
         </p>
+
         <p className="mt-1 break-words text-sm text-slate-500">
           {member.email}
         </p>
@@ -612,25 +613,24 @@ function StaffRow({ member, allocations }) {
       </td>
 
       <td className="px-5 py-4">
-        {assignedClasses.length > 0 ? (
+        {assignedCourses.length > 0 ? (
           <ul className="space-y-3">
-            {assignedClasses.map((assignment) => (
+            {assignedCourses.map((assignment) => (
               <li key={assignment.assignmentId}>
                 <p className="text-sm font-medium text-slate-800">
-                  {assignment.courseTitle || assignment.className}
+                  {assignment.courseTitle}
                 </p>
+
                 <p className="mt-1 text-xs text-slate-500">
                   {formatLabel(assignment.assignmentRole)}
-                  {assignment.className &&
-                  assignment.className !== assignment.courseTitle
-                    ? ` · ${assignment.className}`
-                    : ""}
                 </p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-slate-500">No course assigned</p>
+          <p className="text-sm text-slate-500">
+            No course assigned
+          </p>
         )}
       </td>
 
@@ -640,6 +640,7 @@ function StaffRow({ member, allocations }) {
     </tr>
   );
 }
+
 
 function SummaryCard({ label, value, detail, icon: Icon, tone }) {
   const tones = {
@@ -651,9 +652,7 @@ function SummaryCard({ label, value, detail, icon: Icon, tone }) {
 
   return (
     <article
-      className={`rounded-xl border p-5 shadow-sm ${
-        tones[tone] || tones.blue
-      }`}
+      className={`rounded-xl border p-5 shadow-sm ${tones[tone] || tones.blue}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -703,9 +702,7 @@ function SectionHeader({ title, description }) {
   return (
     <header className="border-b border-slate-200 px-5 py-5">
       <h2 className="text-xl font-bold text-slate-950">{title}</h2>
-      <p className="mt-1 text-sm leading-6 text-slate-500">
-        {description}
-      </p>
+      <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
     </header>
   );
 }

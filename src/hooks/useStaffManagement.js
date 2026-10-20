@@ -12,8 +12,9 @@ import {
 } from "../services/superAdminService";
 
 import {
-  getStaffAllocationManagementData,
-} from "../services/staffAllocationService";
+  appointStaffToCourse,
+  getCourseStaffOptions,
+} from "../services/courseStaffService";
 
 export function useStaffManagement() {
   const queryClient = useQueryClient();
@@ -29,90 +30,77 @@ export function useStaffManagement() {
     staleTime: 30 * 1000,
   });
 
-  const allocationQuery = useQuery({
-    queryKey: ["staff-allocation-management", profile?.id],
-    queryFn: getStaffAllocationManagementData,
+  const courseQuery = useQuery({
+    queryKey: ["staff-course-appointments", profile?.id],
+    queryFn: getCourseStaffOptions,
     enabled,
     staleTime: 30 * 1000,
   });
 
   async function refreshStaffData() {
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: ["staff-management"],
-      }),
+    const keys = [
+      ["staff-management"],
+      ["staff-course-appointments"],
+      ["staff-allocation-management"],
+      ["weekly-planning"],
+      ["super-admin-dashboard"],
+      ["super-admin-students"],
+    ];
 
-      queryClient.invalidateQueries({
-        queryKey: ["staff-allocation-management"],
-      }),
-
-      queryClient.invalidateQueries({
-        queryKey: ["super-admin-dashboard"],
-      }),
-
-      queryClient.invalidateQueries({
-        queryKey: ["super-admin-students"],
-      }),
-    ]);
+    await Promise.all(
+      keys.map((queryKey) =>
+        queryClient.invalidateQueries({ queryKey }),
+      ),
+    );
   }
 
   const appointMutation = useMutation({
-    mutationFn: appointStaffWithClass,
+    mutationFn: (values) =>
+      values.role === "supervisor"
+        ? appointStaffWithClass({
+            ...values,
+            classId: null,
+          })
+        : appointStaffToCourse(values),
 
     onSuccess: refreshStaffData,
 
     onError: (error) => {
-      console.error("Staff assignment failed:", error);
+      console.error("Staff appointment failed:", error);
     },
   });
 
   async function refreshStaffManagement() {
     return Promise.all([
       staffQuery.refetch(),
-      allocationQuery.refetch(),
+      courseQuery.refetch(),
     ]);
   }
 
-  const courseClasses = (
-    allocationQuery.data?.classes || []
-  ).filter((programmeClass) =>
-    ["planned", "active"].includes(programmeClass.status),
-  );
-
   return {
     staffManagement: staffQuery.data || null,
-
     staffSummary: staffQuery.data?.summary || null,
-
     staff: staffQuery.data?.staff || [],
+    eligibleAccounts: staffQuery.data?.eligibleAccounts || [],
 
-    eligibleAccounts:
-      staffQuery.data?.eligibleAccounts || [],
-
-    courseClasses,
-
-    classAllocations:
-      allocationQuery.data?.allocations || [],
+    courses: courseQuery.data?.courses || [],
+    courseAppointments: courseQuery.data?.appointments || [],
 
     staffManagementLoading:
-      staffQuery.isLoading || allocationQuery.isLoading,
+      staffQuery.isLoading || courseQuery.isLoading,
 
     staffManagementFetching:
-      staffQuery.isFetching || allocationQuery.isFetching,
+      staffQuery.isFetching || courseQuery.isFetching,
 
     staffManagementError:
-      staffQuery.error || allocationQuery.error,
+      staffQuery.error || courseQuery.error,
 
     refreshStaffManagement,
 
     appointStaff: appointMutation.mutateAsync,
-
     appointingStaff: appointMutation.isPending,
-
     appointStaffError: appointMutation.error,
-
     appointStaffResult: appointMutation.data,
-
     resetAppointStaff: appointMutation.reset,
   };
 }

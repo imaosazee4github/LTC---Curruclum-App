@@ -53,9 +53,6 @@ export async function createProgrammeClass({
     throw new Error("Select a programme cohort.");
   }
 
-  if (!code?.trim()) {
-    throw new Error("Enter a class code.");
-  }
 
   if (!name?.trim()) {
     throw new Error("Enter a class name.");
@@ -72,7 +69,7 @@ export async function createProgrammeClass({
     {
       p_course_id: courseId,
       p_cohort_id: cohortId,
-      p_code: code.trim(),
+      p_code: code?.trim() || null,
       p_name: name.trim(),
       p_description: cleanOptionalText(description),
       p_delivery_mode:
