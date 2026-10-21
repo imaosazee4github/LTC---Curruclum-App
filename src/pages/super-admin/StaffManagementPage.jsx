@@ -375,49 +375,27 @@ export default function StaffManagementPage() {
                       name="courseId"
                       value={form.courseId}
                       onChange={handleChange}
-                      disabled={
-                        appointingStaff ||
-                        !courses.some(
-                          (course) =>
-                            form.role === "coach" ||
-                            course.teachingRole === form.role,
-                        )
-                      }
+                      disabled={appointingStaff || courses.length === 0}
                       required
                       className={inputClasses}
                     >
                       <option value="">Select a course</option>
 
-                      {courses
-                        .filter(
-                          (course) =>
-                            form.role === "coach" ||
-                            course.teachingRole === form.role,
-                        )
-                        .map((course) => (
-                          <option key={course.id} value={course.id}>
-                            {course.title}
-                          </option>
-                        ))}
+                      {courses.map((course) => (
+                        <option key={course.id} value={course.id}>
+                          {course.title}
+                        </option>
+                      ))}
                     </select>
 
                     <p className="mt-2 text-xs leading-5 text-slate-500">
-                      Appoint staff to the course once. Assign their Class A or
-                      Class B lessons through weekly planning.
+                      Select any active course for this educator appointment.
+                      Save each educator role and course assignment separately.
                     </p>
 
                     {courses.length === 0 ? (
                       <p className="mt-2 text-sm leading-6 text-amber-700">
                         Create a planned or active course first.
-                      </p>
-                    ) : !courses.some(
-                        (course) =>
-                          form.role === "coach" ||
-                          course.teachingRole === form.role,
-                      ) ? (
-                      <p className="mt-2 text-sm leading-6 text-amber-700">
-                        No courses are available for this appointment. Select
-                        another appointment.
                       </p>
                     ) : null}
                   </FormField>
@@ -570,8 +548,7 @@ export default function StaffManagementPage() {
 
 function StaffRow({ member, allocations }) {
   const roles =
-    Array.isArray(member.appointed_roles) &&
-    member.appointed_roles.length
+    Array.isArray(member.appointed_roles) && member.appointed_roles.length
       ? member.appointed_roles
       : [member.role].filter(Boolean);
 
@@ -628,9 +605,7 @@ function StaffRow({ member, allocations }) {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-slate-500">
-            No course assigned
-          </p>
+          <p className="text-sm text-slate-500">No course assigned</p>
         )}
       </td>
 
@@ -640,7 +615,6 @@ function StaffRow({ member, allocations }) {
     </tr>
   );
 }
-
 
 function SummaryCard({ label, value, detail, icon: Icon, tone }) {
   const tones = {
