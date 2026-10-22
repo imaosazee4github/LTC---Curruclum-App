@@ -18,6 +18,7 @@ import {
   saveWeeklyClassStaff,
   saveWeeklyLesson,
   saveWeeklyLessonStaff,
+  saveWeeklyLessonWithTeam,
 } from "../services/weeklyPlanningService";
 
 const REFRESH_KEYS = [
@@ -105,7 +106,8 @@ export function useWeeklyPlanning({
       cohortId,
       teachingWeekId,
     ],
-    queryFn: () => getTeachingWeekDetails(teachingWeekId),
+    queryFn: () =>
+      getTeachingWeekDetails(teachingWeekId),
     enabled:
       enabled &&
       Boolean(cohortId) &&
@@ -155,6 +157,11 @@ export function useWeeklyPlanning({
     mutationFn: saveWeeklyLesson,
   });
 
+  const saveLessonWithTeam = usePlanningMutation({
+    ...mutationOptions,
+    mutationFn: saveWeeklyLessonWithTeam,
+  });
+
   const removeLesson = usePlanningMutation({
     ...mutationOptions,
     mutationFn: removeWeeklyLesson,
@@ -173,11 +180,13 @@ export function useWeeklyPlanning({
       ? weeksData.weeks
       : [];
 
-  const selectedWeek = detailsQuery.data?.week || null;
+  const selectedWeek =
+    detailsQuery.data?.week || null;
 
-  // Do not display a result belonging to a previously selected week.
+  // Only show the review for the currently selected week.
   const reviewResult =
-    reviewMutation.variables?.teachingWeekId === teachingWeekId
+    reviewMutation.variables?.teachingWeekId ===
+    teachingWeekId
       ? reviewMutation.data || null
       : null;
 
@@ -187,6 +196,7 @@ export function useWeeklyPlanning({
     students: optionsQuery.data?.students || [],
     classes: optionsQuery.data?.classes || [],
     staff: optionsQuery.data?.staff || [],
+
     weeks,
     selectedWeek,
     plans: detailsQuery.data?.plans || [],
@@ -200,6 +210,7 @@ export function useWeeklyPlanning({
     saveClassPlan,
     saveClassStaff,
     saveLesson,
+    saveLessonWithTeam,
     removeLesson,
     saveLessonStaff,
 
