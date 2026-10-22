@@ -65,7 +65,6 @@ export async function getWeeklyPlanningOptions(cohortId) {
 export async function getTeachingWeeks(cohortId) {
   requireValue(cohortId, "Select a programme cohort.");
 
-  // Preserve the RPC response until the hook normalizes it.
   return callRpc("get_teaching_weeks", {
     p_cohort_id: cohortId,
   });
@@ -93,7 +92,10 @@ export async function createTeachingWeek({
   notes,
 }) {
   requireValue(cohortId, "Select a programme cohort.");
-  requireValue(weekStart, "Select the Monday starting the week.");
+  requireValue(
+    weekStart,
+    "Select the Monday starting the week.",
+  );
 
   return callRpc("create_teaching_week", {
     p_cohort_id: cohortId,
@@ -172,7 +174,9 @@ export async function saveWeeklyLesson({
   requireValue(endTime, "Enter the end time.");
 
   if (endTime <= startTime) {
-    throw new Error("The end time must follow the start time.");
+    throw new Error(
+      "The end time must follow the start time.",
+    );
   }
 
   return callRpc("save_weekly_lesson", {
@@ -187,6 +191,102 @@ export async function saveWeeklyLesson({
     p_location: optionalText(location),
     p_learning_objectives: optionalText(learningObjectives),
     p_notes: optionalText(notes),
+  });
+}
+
+export async function saveWeeklyLessonWithTeam({
+  teachingWeekId,
+  classId,
+  lesson,
+  staff,
+}) {
+  requireValue(teachingWeekId, "Select a teaching week.");
+  requireValue(classId, "Select a course class.");
+  requireValue(
+    lesson?.title?.trim(),
+    "Enter a lesson title.",
+  );
+  requireValue(
+    lesson?.lessonDate,
+    "Select the lesson date.",
+  );
+  requireValue(
+    lesson?.startTime,
+    "Enter the start time.",
+  );
+  requireValue(
+    lesson?.endTime,
+    "Enter the end time.",
+  );
+
+  if (lesson.endTime <= lesson.startTime) {
+    throw new Error(
+      "The end time must follow the start time.",
+    );
+  }
+
+  const deliveryMode = lesson.deliveryMode || "in_person";
+
+  if (
+    !["in_person", "online", "hybrid"].includes(deliveryMode)
+  ) {
+    throw new Error("Select a valid delivery mode.");
+  }
+
+  if (
+    !staff ||
+    typeof staff !== "object" ||
+    Array.isArray(staff)
+  ) {
+    throw new Error("Select the teaching team.");
+  }
+
+  const staffEntries = Object.entries(staff);
+
+  if (staffEntries.length === 0) {
+    throw new Error("Select the teaching team.");
+  }
+
+  const normalizedStaff = {};
+
+  for (const [role, ids] of staffEntries) {
+    validateStaffRole(role);
+
+    if (
+      !Array.isArray(ids) ||
+      ids.length === 0 ||
+      ids.some(
+        (id) => typeof id !== "string" || !id.trim(),
+      )
+    ) {
+      throw new Error(
+        `Select at least one valid ${role}.`,
+      );
+    }
+
+    normalizedStaff[role] = [
+      ...new Set(ids.map((id) => id.trim())),
+    ];
+  }
+
+  return callRpc("save_weekly_lesson_with_team", {
+    p_teaching_week_id: teachingWeekId,
+    p_class_id: classId,
+    p_lesson: {
+      lessonId: lesson.lessonId || null,
+      title: lesson.title.trim(),
+      lessonDate: lesson.lessonDate,
+      startTime: lesson.startTime,
+      endTime: lesson.endTime,
+      topic: optionalText(lesson.topic),
+      deliveryMode,
+      location: optionalText(lesson.location),
+      learningObjectives: optionalText(
+        lesson.learningObjectives,
+      ),
+      notes: optionalText(lesson.notes),
+    },
+    p_staff: normalizedStaff,
   });
 }
 
@@ -219,14 +319,15 @@ export async function saveWeeklyLessonStaff({
   });
 }
 
-export async function reviewTeachingWeek({ teachingWeekId }) {
+export async function reviewTeachingWeek({
+  teachingWeekId,
+}) {
   requireValue(teachingWeekId, "Select a teaching week.");
 
   return callRpc("review_teaching_week", {
     p_teaching_week_id: teachingWeekId,
   });
 }
-
 
 export async function getCourseTeachingTeamOptions(classId) {
   requireValue(classId, "Select a course class.");
@@ -237,7 +338,11 @@ export async function getCourseTeachingTeamOptions(classId) {
   );
 
   return {
-    roles: Array.isArray(data?.roles) ? data.roles : [],
-    staff: Array.isArray(data?.staff) ? data.staff : [],
+    roles: Array.isArray(data?.roles)
+      ? data.roles
+      : [],
+    staff: Array.isArray(data?.staff)
+      ? data.staff
+      : [],
   };
 }
